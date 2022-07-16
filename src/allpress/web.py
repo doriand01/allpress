@@ -1,34 +1,48 @@
 from copy import deepcopy
 from re import match
+from bs4 import BeautifulSoup as Soup
 
 import requests
 import html.parser as parser
 
-URL_REGEX = '((http|https){1}:\/\/)?((ww\d|www|www\d).)?([\w-]{2,63}.)+[\w-]{2,63}(\/[\w\-._~:?#@!$&\'\(\)*+,;%=]+)+'
+URL_REGEX = '((http|https):\/\/)?((www|ww\d|www\d)\.)?(?=.{5,255})([\w-]{2,63}\.)+\w{2,63}(\/[\w\-._~:?#@!$&\'\(\)*+,;%=]+)*'
+HREF_PARSE_REGEX = '(?<=<a\shref=([\'"]))([\w\-._~:?#@!$&/\'\(\)*+,;%=]+)\1'
 
-class NWSHTMLParser(parser.HTMLParser):
-
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.urls = set()
-
-    def handle_starttag(self, tag, attrs):
-        if tag == 'a':
-            attr_dict = dict(attrs)
-            try:
-                url = attr_dict['href']
-                self.urls.add(attr_dict['href'])
-            except:
-                print(f'Tag {tag} has no href. Skipping...')
-
+def _html_index_helper(root: str, urls_to_scan=None, prev_iteration_urls=set(), parser=None):
+    if not urls_to_scan:
+        parser = Soup(requests.get(root).content, 'html.parser')
+        urls_to_scan = set([url.attrs['href'] for url in list(parser.find_all('a'))])
+    urls_found = deepcopy(prev_iteration_urls)
+    next_urls = set()
+    for url in urls_to_scan:
+        if root in url and url not in urls_found:
+            print(f'Appending {url} to index...')
+            urls_found.add(url)
+            next_urls.add(url)
+        elif root not in url and url not in urls_found:
+            print(f'{url} does not contain the root. Attempting to match to regex to see if it is a valid url...')
+            joined_url = '/'.join([root, url])
+            if Crawler.is_valid_url(joined_url):
+                print(f'Attempting to make request to {joined_url}')
+                response = requests.get(joined_url)
+                if response.status_code != 200:
+                    print(f'Bad response code: {response.status_code}. Skipping...')
+                    continue
+                else:
+                    print(f'Appending {url} to index...')
+                    urls_found.add(url)
+                    next_urls.add(url)
+    if len(next_urls) == 0:
+        return urls_found
+    elif len(next_urls) > 0:
+        return _html_index_helper(root, urls_to_scan=next_urls, prev_iteration_urls=urls_found, parser=parser)
+    
 
 class Crawler:
- # te
-    def __init__(self, root_url):
+    def __init__(self, root_url: str):
         self.root_url = root_url
         self.total_indexed = set()
         self.root_index = set()
-        self.parser = NWSHTMLParser()
 
     @classmethod
     def is_valid_url(self, url: str):
@@ -49,69 +63,11 @@ class Crawler:
         to_index = set()
         new_to_index = set()
 
-
         ### Index root to get primary list of urls accessible from the homepage. Will exclude all urls that redirect to pages outside of the website.
         print(f'Parsing HTML response from {root}...')
-        self.parser.feed(response.text)
-        for uri in self.parser.urls:
-            if root in uri:
-                print(f'Appending {uri} to index...')
-                self.root_index.add(uri)
-                self.total_indexed.add(uri)
-            else:
-                print(f'{uri} does not contain the root. Attempting to match to regex to see if it is a valid url...')
-                joined_url = '/'.join([root, uri])
-                if Crawler.is_valid_url(joined_url):
-                    print(f'Attempting to make request to {joined_url}')
-                    response = requests.get(joined_url)
-                    if response.status_code != 200:
-                        print(f'Bad response code: {response.status_code}. Skipping...')
-                        continue
-                    else:
-                        print(f'Appending {uri} to index...')
-                        self.root_index.add(uri)
-                        self.total_indexed.add(uri)
-        print(f'{len(self.root_index)} href urls parsed from the root url {root}.')
-        to_index = self.parser.urls
-        next_to_index = set()
-        self.parser.urls = set()
-    
-        ## Parses through the touched URLs in the home page. Need to make recursive, potentially through the use of helper functions.
-        if num_to_index and len(self.total_indexed) >= num_to_index:
-            return
-        else:
-            num_skipped = 0
-            num_found = 0
-            for href in to_index:
-                if num_to_index and len(self.total_indexed) >= num_to_index:
-                    return
-                try:
-                    print(f'Making request to {href}')
-                    response = requests.get(href)
-                    print(f'Reponse received. Code: {response.status_code}')
-                    if 'html' not in response.headers['Content-Type']:
-                        print(f'{href} is not an HTML page. Skipping...')
-                        continue
-                    self.parser.feed(response.text)
-                except Exception as e:
-                    print(f'Request to {href} failed:\n {e}')
-                for uri in self.parser.urls:
-                    if root not in uri:
-                        num_skipped += 1
-                        continue
-                    elif uri not in to_index and uri not in self.total_indexed:
-                        new_to_index.add(uri)
-                        self.total_indexed.add(uri)
-                        num_found += 1
-                self.parser.urls = set()
-            print(f'LENGTH OF INDEX: {len(to_index)}')
-            to_index = deepcopy(new_to_index)
-            new_to_index = set()
-            if num_skipped > 0:
-                print(f'{num_skipped} urls that redirected away from the website omitted from index.')
-                num_skipped = 0
-            if num_found > 0:
-                print(f'{num_found} new urls found, added to index.')
-                num_found = 0
+        urls_parsed = _html_index_helper(root)
+        self.total_indexed = deepcopy(urls_parsed)
+        del urls_parsed
+       
 
 

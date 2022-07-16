@@ -14,3 +14,10 @@ CHANGELOG
 - Refactor `allpress.web.Crawler().create_url_tree()` function as `index_site()`
 - Add keyword argument `num_to_index` to `index_site()` function to allow crawler to stop indexing once it has found a predefined number of pages.
 
+## 0.1.2a:
+
+- Updated URL verification regex.
+- Fixed URL regex matching bugs.
+- Implemented BeautifulSoup library, cleaned up code.
+- Begin work on database implementation (psycopg2)
+
