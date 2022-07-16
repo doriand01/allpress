@@ -1,4 +1,5 @@
-from allpress import data
+from allpress import db
+from allpress import lexical
 from allpress import web
 
 import sys

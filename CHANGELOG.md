@@ -21,3 +21,11 @@ CHANGELOG
 - Implemented BeautifulSoup library, cleaned up code.
 - Begin work on database implementation (psycopg2)
 
+## 0.2.0a
+
+- Added modules `settings.py` and `lexical.py`.
+- Implemented some lexical processing;
+- Ability to detect language of strings of text, relies
+on `googletrans` library.
+- Ability to compile web page `<p>` tags into one body of text.
+
