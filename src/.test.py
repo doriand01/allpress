@@ -7,6 +7,8 @@ from os import stat
 from sys import argv
 from time import sleep
 
+from allpress import web
+
 class ModuleReload(Exception):
 
     def __init__(self):
@@ -28,9 +30,13 @@ if __name__ == '__main__':
         thread.start()
         try:
             test_crawl_url = argv[1]
-            test_crawl_num_to_index = int(argv[2])
             test_crawler = allpress.web.Crawler(test_crawl_url)
-            test_crawler.index_site(num_to_index=test_crawl_num_to_index)
+            test_crawler.index_site()
+            mods = []
+            for page in test_crawler.total_indexed:
+                mods.append(web.Crawler.create_page_model(page))
+            
+
         except KeyboardInterrupt:
             print('Keyboard interrupt. Hit enter to continue.')
             a = input(' ')

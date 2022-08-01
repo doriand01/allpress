@@ -1,6 +1,8 @@
-from allpress import db
+from allpress.db import cursor
+from allpress.db import models
 from allpress import lexical
 from allpress import web
+from allpress import settings
 
 import sys
 import os
@@ -8,5 +10,5 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
 if __name__ == '__main__':
-    nws = web.create_url_tree('http://tesfanews.net')
+    nws = web.index_site('http://tesfanews.net')
     print('truepress')

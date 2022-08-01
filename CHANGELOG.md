@@ -29,3 +29,12 @@ CHANGELOG
 on `googletrans` library.
 - Ability to compile web page `<p>` tags into one body of text.
 
+## 0.3.0a
+
+- Continue implementation of postgres data models.
+- Begin implementation of migration features.
+- Moved `URL_REGEX` and `HREF_PARSE_REGEX` to `settings.py`
+
+## 0.4.0a
+
+- Add database migration features for `PageModel`.

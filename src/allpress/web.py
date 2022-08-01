@@ -1,12 +1,18 @@
 from copy import deepcopy
 from re import match
+from unicodedata import ucd_3_2_0
 from bs4 import BeautifulSoup as Soup
+
+from allpress import lexical
+from allpress.db import models
+from allpress.settings import URL_REGEX, HREF_PARSE_REGEX
 
 import requests
 import html.parser as parser
 
-URL_REGEX = '((http|https):\/\/)?((www|ww\d|www\d)\.)?(?=.{5,255})([\w-]{2,63}\.)+\w{2,63}(\/[\w\-._~:?#@!$&\'\(\)*+,;%=]+)*'
-HREF_PARSE_REGEX = '(?<=<a\shref=([\'"]))([\w\-._~:?#@!$&/\'\(\)*+,;%=]+)\1'
+
+
+
 
 def _html_index_helper(root: str, urls_to_scan=None, prev_iteration_urls=set(), parser=None):
     if not urls_to_scan:
@@ -51,11 +57,31 @@ class Crawler:
             return True
         else:
             return False 
+
+    @classmethod
+    def create_page_model(self, url: str) -> models.PageModel:
+        page_url = url
+        page_p_data = lexical._compile_p_text(page_url)
+        if not page_p_data:
+            page_p_data = 'NULL'
+        print(page_p_data)
+        page_language = lexical._detect_string_language(page_p_data)
+        page_model = models.PageModel(url, 
+                                  ' ', page_p_data, 
+                                  page_language)
+        return page_model
+
+    @classmethod
+    def create_translation_model(self, page: models.PageModel) -> models.TranslationModel:
+        page_uid = page['page_uid']
+        translation_text = page['p_data']
         
+
+
     def get_root_url(self) -> str:
         return self.root_url
     
-    def index_site(self, num_to_index=None):
+    def index_site(self):
         print(f'Making request to {self.root_url}...')
         response = requests.get(self.root_url)
         root = response.url
@@ -67,7 +93,6 @@ class Crawler:
         print(f'Parsing HTML response from {root}...')
         urls_parsed = _html_index_helper(root)
         self.total_indexed = deepcopy(urls_parsed)
-        del urls_parsed
        
 
 
