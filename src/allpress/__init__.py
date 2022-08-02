@@ -3,6 +3,7 @@ from allpress.db import models
 from allpress import lexical
 from allpress import web
 from allpress import settings
+from allpress import exceptions
 
 import sys
 import os

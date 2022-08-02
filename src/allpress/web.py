@@ -1,17 +1,14 @@
 from copy import deepcopy
 from re import match
 from unicodedata import ucd_3_2_0
+
+import requests
+import html.parser as parser
 from bs4 import BeautifulSoup as Soup
 
 from allpress import lexical
 from allpress.db import models
 from allpress.settings import URL_REGEX, HREF_PARSE_REGEX
-
-import requests
-import html.parser as parser
-
-
-
 
 
 def _html_index_helper(root: str, urls_to_scan=None, prev_iteration_urls=set(), parser=None):
@@ -59,25 +56,35 @@ class Crawler:
             return False 
 
     @classmethod
-    def create_page_model(self, url: str) -> models.PageModel:
-        page_url = url
-        page_p_data = lexical._compile_p_text(page_url)
-        if not page_p_data:
-            page_p_data = 'NULL'
-        print(page_p_data)
-        page_language = lexical._detect_string_language(page_p_data)
-        page_model = models.PageModel(url, 
-                                  ' ', page_p_data, 
-                                  page_language)
-        return page_model
-
-    @classmethod
-    def create_translation_model(self, page: models.PageModel) -> models.TranslationModel:
+    def create_translation_model(self, 
+                                 page: models.PageModel, target_language=None,
+                                 auto=True, text=None) -> models.TranslationModel:
         page_uid = page['page_uid']
-        translation_text = page['p_data']
-        
-
-
+        if not target_language:
+            translation_text = page['p_data']
+            translation_language = page['language']
+            trasnlation_is_original = True
+            translation_is_official = True
+        if target_language and auto:
+            translation_text = lexical.translate_page(page['p_data'], 
+                                                      src=page['language'],
+                                                      dest=target_language)
+            translation_language = target_language
+            translation_is_original = False
+            translation_is_official = False
+        elif target_language and not auto:
+            translation_text = text
+            translation_language = target_language
+            translation_is_original = False
+            translation_is_official = True
+        translation_model = models.TranslationModel(
+            page_uid, 
+            translation_text,
+            translation_language,
+            translation_is_original,
+            translation_is_official,)
+        return translation_model
+            
     def get_root_url(self) -> str:
         return self.root_url
     

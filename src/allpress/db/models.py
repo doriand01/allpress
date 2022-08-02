@@ -1,8 +1,10 @@
-import psycopg2
-
-from allpress.lexical import _encapsulate_quotes
 from hashlib import md5
 from os import urandom
+
+import psycopg2
+
+from allpress.lexical import *
+
 
 """
 `PageModel` is the class which models the `page` table in the Postgres database.
@@ -28,14 +30,14 @@ class PageModel:
     def __init__(self, page_url: str, 
                  home_url: str, p_data: str, 
                  language: str):
-        self.pg_page_url = _encapsulate_quotes(page_url)
-        self.pg_page_home_url = _encapsulate_quotes(home_url)
-        self.pg_page_p_data = _encapsulate_quotes(p_data)
-        self.pg_page_language = _encapsulate_quotes(language)
+        self.pg_page_url = encapsulate_quotes(page_url)
+        self.pg_page_home_url = encapsulate_quotes(home_url)
+        self.pg_page_p_data = encapsulate_quotes(p_data)
+        self.pg_page_language = encapsulate_quotes(language)
         self.pg_page_translations = None
         hashobj = md5()
         hashobj.update(urandom(10))
-        self.pg_page_uid = _encapsulate_quotes(hashobj.hexdigest())
+        self.pg_page_uid = encapsulate_quotes(hashobj.hexdigest())
 
     def __str__(self):
         return f'<{self.pg_page_url}; {self.pg_page_language}...>'
@@ -45,6 +47,7 @@ class PageModel:
 
     def __getitem__(self, val):
         return getattr(self, f'pg_{self.__class__.__name__.lower().replace("model", "")}_{val}')
+
 
 """
 `TranslationModel` is the class which models the `translation` table in the Postgres 
@@ -59,11 +62,12 @@ class TranslationModel:
     def __init__(self, page_uid: str, 
                  translation_text: str, translation_language: str, 
                  is_original: bool, is_official: bool):
-        self.pg_translation_page_uid = _encapsulate_quotes(page_uid)
-        self.pg_translation_translation_text = _encapsulate_quotes(translation_text)
-        self.pg_translation_translation_language = _encapsulate_quotes(translation_language)
-        self.pg_translation_is_original = _encapsulate_quotes(is_original)
-        self.pg_translation_is_official = _encapsulate_quotes(is_official)
+        self.pg_translation_page_uid = encapsulate_quotes(page_uid)
+        self.pg_translation_translation_text = encapsulate_quotes(translation_text)
+        self.pg_translation_translation_language = encapsulate_quotes(translation_language)
+        self.pg_translation_is_original = encapsulate_quotes(str(is_original)) ## Booleans must be converted to str
+        self.pg_translation_is_official = encapsulate_quotes(str(is_official)) ## before cursor functions can be performed
+                                                                               ## on them
 
     def __str__(self):
         return f'<Translation of {self.pg_translation_page_uid[:5]}, Lang:{self.pg_translation_translation_language}>'
@@ -73,3 +77,44 @@ class TranslationModel:
 
     def __getitem__(self, val):
         return getattr(self, f'pg_{self.__class__.__name__.lower().replace("model", "")}_{val}')
+
+
+def create_page_model(url: str) -> PageModel:
+    page_url = url
+    page_p_data = compile_p_text(page_url)
+    if not page_p_data:
+        page_p_data = 'NULL'
+    page_language = detect_string_language(page_p_data)
+    page_model = PageModel(url, 
+                           ' ', page_p_data, 
+                           page_language)
+    return page_model
+
+
+def create_translation_model(page: PageModel, target_language=None,
+                             auto=True, text=None) -> TranslationModel:
+    page_uid = page['uid']
+    if not target_language:
+        translation_text = page['p_data']
+        translation_language = page['language']
+        translation_is_original = True
+        translation_is_official = True
+    if target_language and auto:
+        translation_text = translate_page(page['p_data'], 
+                                          src=page['language'],
+                                          dest=target_language)
+        translation_language = target_language
+        translation_is_original = False
+        translation_is_official = False
+    elif target_language and not auto:
+        translation_text = text
+        translation_language = target_language
+        translation_is_original = False
+        translation_is_official = True
+    translation_model = TranslationModel(
+        page_uid, 
+        translation_text,
+        translation_language,
+        translation_is_original,
+        translation_is_official,)
+    return translation_model

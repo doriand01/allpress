@@ -8,7 +8,8 @@ from sys import argv
 from time import sleep
 
 from allpress import web
-
+from allpress.db import cursor
+from allpress.db.models import create_page_model, create_translation_model
 class ModuleReload(Exception):
 
     def __init__(self):
@@ -23,6 +24,11 @@ def stat_file(uri):
         else:
             continue
     
+def reloadit():
+    reload(allpress.web)
+    reload(allpress.lexical)
+    reload(allpress.db.models)
+    reload(allpress.db.cursor)
 
 if __name__ == '__main__':
     while True:
@@ -32,9 +38,13 @@ if __name__ == '__main__':
             test_crawl_url = argv[1]
             test_crawler = allpress.web.Crawler(test_crawl_url)
             test_crawler.index_site()
-            mods = []
+            pag_mods = []
+            trans_mods = []
             for page in test_crawler.total_indexed:
-                mods.append(web.Crawler.create_page_model(page))
+                modl= create_page_model(page)
+                tmodl = create_translation_model(modl)
+                pag_mods.append(modl)
+                trans_mods.append(tmodl)      
             
 
         except KeyboardInterrupt:
@@ -42,14 +52,13 @@ if __name__ == '__main__':
             a = input(' ')
             print(test_crawler)
             del test_crawler
-            reload(allpress)
-            reload(allpress.web)
+            reloadit()
+
         except ModuleReload:
             print('Change in module detected. Reloading...')
             del test_crawler
-            reload(allpress)
-            reload(allpress.web)
+            reloadit()
+            
         print('Tasks complete. Hit enter to reload modules and re-run.')
         a = input(' ')
-        reload(allpress)
-        reload(allpress.web)
+        reloadit()

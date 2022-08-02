@@ -38,3 +38,10 @@ on `googletrans` library.
 ## 0.4.0a
 
 - Add database migration features for `PageModel`.
+
+## 0.4.1a
+
+- Remove lambda functions for generating insertion queries and table creation queries.
+- Refactored code to better follow PEP.
+- Added method to create database model for translation objects.
+- Refactored code and relocated some functions
