@@ -54,36 +54,6 @@ class Crawler:
             return True
         else:
             return False 
-
-    @classmethod
-    def create_translation_model(self, 
-                                 page: models.PageModel, target_language=None,
-                                 auto=True, text=None) -> models.TranslationModel:
-        page_uid = page['page_uid']
-        if not target_language:
-            translation_text = page['p_data']
-            translation_language = page['language']
-            trasnlation_is_original = True
-            translation_is_official = True
-        if target_language and auto:
-            translation_text = lexical.translate_page(page['p_data'], 
-                                                      src=page['language'],
-                                                      dest=target_language)
-            translation_language = target_language
-            translation_is_original = False
-            translation_is_official = False
-        elif target_language and not auto:
-            translation_text = text
-            translation_language = target_language
-            translation_is_original = False
-            translation_is_official = True
-        translation_model = models.TranslationModel(
-            page_uid, 
-            translation_text,
-            translation_language,
-            translation_is_original,
-            translation_is_official,)
-        return translation_model
             
     def get_root_url(self) -> str:
         return self.root_url
