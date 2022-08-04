@@ -11,6 +11,7 @@ from allpress.db import models
 from allpress.settings import URL_REGEX, HREF_PARSE_REGEX
 
 
+
 def _html_index_helper(root: str, urls_to_scan=None, prev_iteration_urls=set(), parser=None):
     if not urls_to_scan:
         parser = Soup(requests.get(root).content, 'html.parser')

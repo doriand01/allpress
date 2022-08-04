@@ -4,6 +4,7 @@ from os import urandom
 import psycopg2
 
 from allpress.lexical import *
+from allpress.exceptions import TranslationError
 
 
 """
@@ -79,6 +80,12 @@ class TranslationModel:
         return getattr(self, f'pg_{self.__class__.__name__.lower().replace("model", "")}_{val}')
 
 
+"""This function creates a PageModel object on the fly.
+A PageModel should only be created if the content on
+the page is known; therefore the function will attempt
+to compile all of the <p> tags on the page prior to
+instantiating the object.
+"""
 def create_page_model(url: str) -> PageModel:
     page_url = url
     page_p_data = compile_p_text(page_url)
@@ -91,6 +98,22 @@ def create_page_model(url: str) -> PageModel:
     return page_model
 
 
+"""Creates a translation model in the database, which
+is simply any stored written version of the article in
+any language. It can be done automatically via the
+googletrans module, or a human written piece of text
+can be used as the translation. A translation is
+"original" if it is the original translation of the
+article (Original article), and is "official" if it
+has been verified as accurate by a human.\n
+page: PageModel (The PageModel object the translation
+is to be generated from.) \n
+**target_language: str (Language to translate to.) \n
+auto=True: bool (Use automatic translation or not.
+auto translations use google translate,) \n
+text=None: str (Optional argument to use human written
+text for a translation. Must not be none if auto=False.)
+"""
 def create_translation_model(page: PageModel, target_language=None,
                              auto=True, text=None) -> TranslationModel:
     page_uid = page['uid']
@@ -107,6 +130,11 @@ def create_translation_model(page: PageModel, target_language=None,
         translation_is_original = False
         translation_is_official = False
     elif target_language and not auto:
+        if not text:
+            raise TranslationError("""No text was provided for the translation. To 
+                                   If you do not wish to use text for the translation
+                                   enable auto=True.
+                                   """)
         translation_text = text
         translation_language = target_language
         translation_is_original = False
