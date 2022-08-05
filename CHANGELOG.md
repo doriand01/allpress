@@ -63,6 +63,11 @@ on `googletrans` library.
 - Add documentation.
 
 ## 0.5.0a
+### 5 August 2022
 
 - Over haul `allpress.db.cursor` transaction system.
 - Make `allpress.web.Crawler().index_site()` method recursive.
+
+## 0.5.1a
+
+- Complete method to provide for migration of `TranslationModel`.

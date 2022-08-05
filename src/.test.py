@@ -48,7 +48,8 @@ if __name__ == '__main__':
                 tmodl = create_translation_model(modl)
                 pag_mods.append(modl)
                 trans_mods.append(tmodl)  
-            cursor.migrate_pages_to_db(pag_mods)   
+            cursor.migrate_pages_to_db(pag_mods)  
+            cursor.migrate_translations_to_db(trans_mods) 
             print('yay') 
             
 

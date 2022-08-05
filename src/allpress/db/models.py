@@ -61,12 +61,23 @@ human verified translation.
 class TranslationModel:
     
     column_name_type_store = {
-        'page_uid'    : 'varchar(64)'
+        'uid'                  : 'varchar(64)',
+        'translation_text'     : 'text',
+        'translation_language' : 'varchar(3)',
+        'is_original'          : 'boolean',
+        'is_official'          : 'boolean',
     }
+    column_names = [
+        'uid',
+        'translation_text',
+        'translation_language',
+        'is_original',
+        'is_official',
+    ]
     def __init__(self, page_uid: str, 
                  translation_text: str, translation_language: str, 
                  is_original: bool, is_official: bool):
-        self.pg_translation_page_uid = page_uid
+        self.pg_translation_uid = page_uid
         self.pg_translation_translation_text = translation_text
         self.pg_translation_translation_language = translation_language
         self.pg_translation_is_original = str(is_original)## Booleans must be converted to str

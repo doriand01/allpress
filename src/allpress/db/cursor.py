@@ -39,17 +39,18 @@ ForeignKeyWithoutReferenceError.)
                                 primary_key=None, 
                                 foreign_key=None,
                                 reference_table=None) -> str:
-        column_names_and_types_string = str()
+        column_names_and_types_string = ''
         for key, val in zip(list(column_names_and_types.keys()), list(column_names_and_types.values())):
             if primary_key and key == primary_key:
-                column_names_and_types_string = column_names_and_types_string + f'{key} {val} PRIMARY KEY,'
+                column_names_and_types_string += f'{key} {val} PRIMARY KEY,'
                 continue
-            column_names_and_types_string = column_names_and_types_string + f'{key} {val},'
-            if foreign_key and reference_table:
-                constraint_string = f' CONSTRAINT fk_{reference_table} FOREIGN KEY({foreign_key}) REFERENCES {reference_table}({foreign_key})'
-                return f'CREATE TABLE {table_name} ({column_names_and_types_string[:-1]})' + constraint_string
+  
+            if (foreign_key and reference_table) and (key == foreign_key):
+                column_names_and_types_string += f'{key} {val} REFERENCES {reference_table}({foreign_key}),'
+                continue
             elif foreign_key and not reference_table:
                 raise ForeignKeyWithoutReferenceError(f'Reference table not provided for foreign key {foreign_key}')
+            column_names_and_types_string += f'{key} {val},'
 
         return f'CREATE TABLE {table_name} ({column_names_and_types_string[:-1]})'
     
@@ -131,3 +132,26 @@ def migrate_pages_to_db(pages: list):
 
 def migrate_translations_to_db(translation_objects: list):
     table_name = 'pg_translation'
+    for translation in translation_objects:
+        column_values = []
+        for column_name in TranslationModel.column_names:
+            column_values.append(translation[column_name])
+        try:
+            Transactions.insert_rows(
+                table_name,
+                TranslationModel.column_names,
+                column_values
+            )
+        except UndefinedTable:
+            db_cursor.execute('ROLLBACK')
+            Transactions.create_table(
+                table_name,
+                TranslationModel.column_name_type_store,
+                foreign_key='uid',
+                reference_table='pg_page'
+            )
+            Transactions.insert_rows(
+                table_name,
+                TranslationModel.column_names,
+                column_values
+            )
