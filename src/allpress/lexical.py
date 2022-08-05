@@ -31,11 +31,15 @@ def compile_p_text(url: str) -> str:
 
 def encapsulate_quotes(string: str) -> str:
     print(string)
-    return "'" + string + "'"
+    return "$$" + string + "$$"
 
 
 def translate_page(text: str, src: str, dest: str) -> str:
     translator = Translator()
     result = translator.translate(text, src=src, dest=dest).text
     return result
+
+
+def remove_fragment(url: str) -> str:
+    return url.split('#')[0]
     

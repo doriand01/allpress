@@ -25,7 +25,7 @@ CHANGELOG
 - Begin work on database implementation (psycopg2)
 
 ## 0.2.0a
-### 16 July 2022
+
 
 - Added modules `settings.py` and `lexical.py`.
 - Implemented some lexical processing;
@@ -41,7 +41,7 @@ on `googletrans` library.
 - Moved `URL_REGEX` and `HREF_PARSE_REGEX` to `settings.py`
 
 ## 0.4.0a
-### 1 August 2022
+
 
 - Add database migration features for `PageModel`.
 
@@ -59,6 +59,10 @@ on `googletrans` library.
 - Add primary key constraint for `pg_page` table in PostgreSQL database.
 
 ## 0.4.3a
-### 4 Auust 2022
 
 - Add documentation.
+
+## 0.5.0a
+
+- Over haul `allpress.db.cursor` transaction system.
+- Make `allpress.web.Crawler().index_site()` method recursive.

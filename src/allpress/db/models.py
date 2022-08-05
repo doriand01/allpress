@@ -31,14 +31,14 @@ class PageModel:
     def __init__(self, page_url: str, 
                  home_url: str, p_data: str, 
                  language: str):
-        self.pg_page_url = encapsulate_quotes(page_url)
-        self.pg_page_home_url = encapsulate_quotes(home_url)
-        self.pg_page_p_data = encapsulate_quotes(p_data)
-        self.pg_page_language = encapsulate_quotes(language)
+        self.pg_page_url = page_url
+        self.pg_page_home_url = home_url
+        self.pg_page_p_data = p_data
+        self.pg_page_language = language
         self.pg_page_translations = None
         hashobj = md5()
         hashobj.update(urandom(10))
-        self.pg_page_uid = encapsulate_quotes(hashobj.hexdigest())
+        self.pg_page_uid = hashobj.hexdigest()
 
     def __str__(self):
         return f'<{self.pg_page_url}; {self.pg_page_language}...>'
@@ -59,15 +59,18 @@ translation is the original translation of the text, and if it is an offical,
 human verified translation.
 """
 class TranslationModel:
-
+    
+    column_name_type_store = {
+        'page_uid'    : 'varchar(64)'
+    }
     def __init__(self, page_uid: str, 
                  translation_text: str, translation_language: str, 
                  is_original: bool, is_official: bool):
-        self.pg_translation_page_uid = encapsulate_quotes(page_uid)
-        self.pg_translation_translation_text = encapsulate_quotes(translation_text)
-        self.pg_translation_translation_language = encapsulate_quotes(translation_language)
-        self.pg_translation_is_original = encapsulate_quotes(str(is_original)) ## Booleans must be converted to str
-        self.pg_translation_is_official = encapsulate_quotes(str(is_official)) ## before cursor functions can be performed
+        self.pg_translation_page_uid = page_uid
+        self.pg_translation_translation_text = translation_text
+        self.pg_translation_translation_language = translation_language
+        self.pg_translation_is_original = str(is_original)## Booleans must be converted to str
+        self.pg_translation_is_official = str(is_official) ## before cursor functions can be performed
                                                                                ## on them
 
     def __str__(self):
@@ -90,7 +93,7 @@ def create_page_model(url: str) -> PageModel:
     page_url = url
     page_p_data = compile_p_text(page_url)
     if not page_p_data:
-        page_p_data = 'NULL'
+        raise NoParagraphDataError(f'{url} does not contain any <p> data to extract.')
     page_language = detect_string_language(page_p_data)
     page_model = PageModel(url, 
                            ' ', page_p_data, 

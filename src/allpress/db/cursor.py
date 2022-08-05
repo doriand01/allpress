@@ -2,7 +2,7 @@ from psycopg2.errors import *
 import psycopg2
 
 from allpress.settings import *
-from allpress.db.models import PageModel
+from allpress.db.models import PageModel, TranslationModel
 from allpress.lexical import encapsulate_quotes
 from allpress.exceptions import ForeignKeyWithoutReferenceError
 
@@ -18,16 +18,10 @@ postgres_database_connection = psycopg2.connect(
 db_cursor = postgres_database_connection.cursor()
 
 
-"""Generates an insertion query for a single row.  \n\n
-table_name: str (The name of the table to be modified) \n
-column_names: list (Names of the columns in the table to be modified) \n
-values: list (Values to be inserted into the table)
-"""
-def generate_insertion_query(table_name: str, column_names=[], values=[]) -> str:
-    return f'INSERT INTO {table_name} ({", ".join(column_names)}) VALUES ({", ".join(values) });'
+class Transactions:
 
 
-"""Generates a query to create a new table in the database. \n\n
+    """Generates a query to create a new table in the database. \n\n
 table name: str (Name of table to be created) \n
 column_names_and_types: dict (Key-value dictionary containing
 tha name of every column and the column's datatype. Refer to
@@ -38,24 +32,70 @@ allpress.db.models.Model classes.) \n
 argument, but required when foreign_key is used, or will raise 
 ForeignKeyWithoutReferenceError.)
 """
-def generate_create_table_query(table_name: str, 
+    @classmethod
+    def generate_create_table_query(self,
+                                table_name: str, 
                                 column_names_and_types: dict, 
                                 primary_key=None, 
                                 foreign_key=None,
                                 reference_table=None) -> str:
-    column_names_and_types_string = str()
-    for key, val in zip(list(column_names_and_types.keys()), list(column_names_and_types.values())):
-        if primary_key and key == primary_key:
-            column_names_and_types_string = column_names_and_types_string + f'{key} {val} PRIMARY KEY,'
-            continue
-        column_names_and_types_string = column_names_and_types_string + f'{key} {val},'
-        if foreign_key and reference_table:
-            constraint_string = f' CONSTRAINT fk_{reference_table} FOREIGN KEY({foreign_key}) REFERENCES {reference_table}({foreign_key})'
-            return f'CREATE TABLE {table_name} ({column_names_and_types_string[:-1]})' + constraint_string
-        elif foreign_key and not reference_table:
-            raise ForeignKeyWithoutReferenceError(f'Reference table not provided for foreign key {foreign_key}')
+        column_names_and_types_string = str()
+        for key, val in zip(list(column_names_and_types.keys()), list(column_names_and_types.values())):
+            if primary_key and key == primary_key:
+                column_names_and_types_string = column_names_and_types_string + f'{key} {val} PRIMARY KEY,'
+                continue
+            column_names_and_types_string = column_names_and_types_string + f'{key} {val},'
+            if foreign_key and reference_table:
+                constraint_string = f' CONSTRAINT fk_{reference_table} FOREIGN KEY({foreign_key}) REFERENCES {reference_table}({foreign_key})'
+                return f'CREATE TABLE {table_name} ({column_names_and_types_string[:-1]})' + constraint_string
+            elif foreign_key and not reference_table:
+                raise ForeignKeyWithoutReferenceError(f'Reference table not provided for foreign key {foreign_key}')
 
-    return f'CREATE TABLE {table_name} ({column_names_and_types_string[:-1]})'
+        return f'CREATE TABLE {table_name} ({column_names_and_types_string[:-1]})'
+    
+
+    """Generates an insertion query for a single row.  \n\n
+    table_name: str (The name of the table to be modified) \n
+    column_names: list (Names of the columns in the table to be modified) \n
+    values: list (Values to be inserted into the table)
+    """
+    @classmethod
+    def generate_insertion_query(self, table_name: str, column_names=[], values=[]) -> str:
+        return f'INSERT INTO {table_name} ({", ".join(column_names)}) VALUES ({", ".join(values) });'
+
+    
+    @classmethod
+    def insert_rows(self, table: str, column_names: list, values: list):
+        encapsulated_values = [encapsulate_quotes(val) for val in values]
+        insert_query = Transactions.generate_insertion_query(
+                            table,
+                            column_names,
+                            encapsulated_values)
+        db_cursor.execute(insert_query)
+        postgres_database_connection.commit()
+    
+
+    @classmethod
+    def create_table(self, 
+                     table: str, 
+                     column_names_and_types: dict,
+                     primary_key=None,
+                     foreign_key=None,
+                     reference_table=None):
+        creation_query = Transactions.generate_create_table_query(
+                            table,
+                            column_names_and_types,
+                            primary_key=primary_key,
+                            foreign_key=foreign_key,
+                            reference_table=reference_table,)
+        db_cursor.execute(creation_query)
+        postgres_database_connection.commit()
+
+
+
+
+
+
     
 
 """Migrates list of PageModel objects to the database.\n\n
@@ -65,32 +105,29 @@ to the database.)
 def migrate_pages_to_db(pages: list):
     table_name = 'pg_page'
     for page in pages:
+        column_values = []
+        for column_name in PageModel.column_names:
+            column_values.append(page[column_name])
         try:
-            column_values = []
-            for column_name in PageModel.column_names:
-                column_values.append(encapsulate_quotes(page[column_name]))
-
-            insert_query = generate_insertion_query(
+            Transactions.insert_rows(
                 table_name,
                 PageModel.column_names,
                 column_values
             )
-            print(insert_query)
-            db_cursor.execute(insert_query)
-            postgres_database_connection.commit()
         except UndefinedTable:
             db_cursor.execute('ROLLBACK')
-            create_table_query = generate_create_table_query(table_name,
-                                                             PageModel.column_name_type_store,
-                                                             primary_key='uid')
-            db_cursor.execute(create_table_query)
-            column_values = []
-            for column_name in PageModel.column_names:
-                column_values.append(encapsulate_quotes(page[column_name]))
-            insert_query = generate_insertion_query(
+            Transactions.create_table(
+                table_name,
+                PageModel.column_name_type_store,
+                primary_key='uid'
+            )
+            Transactions.insert_rows(
                 table_name,
                 PageModel.column_names,
                 column_values
             )
-            db_cursor.execute(insert_query) 
-            postgres_database_connection.commit()
+
+
+
+def migrate_translations_to_db(translation_objects: list):
+    table_name = 'pg_translation'
