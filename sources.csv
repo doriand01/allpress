@@ -1,0 +1,27 @@
+Continent,Country,Official Name,Headquarters,Website,Subdomains,Languages,Notes:
+Asia,South Korea,Yonhap News Agency,Seoul,http://yna.co.kr,"ar, en, cn, sp, fr, jp","KO, EN, AR, ZH, JA, FR, ES",Public ownership.
+Asia,Norht Korea,Uriminzokkiri,N/A,http://uriminzokkiri.com,,"KO, EN, RU, ZH, JA",State ownership
+Asia,China,China Global Television Network,Beijing,http://cgtn.com,,"EN, ES, FR, AR, RU",Public ownership.
+Asia,China,Xinhua News Agency,Beijing,http://news.cn,english,"ZH, EN",
+Asia,Japan,Nippon Housou Kyoukai,Tokyo,http://www.nhk.or.jp,,"JP, ZH, KO, EN",Public ownership.
+Asia,Iran,Islamic Republic News Agency,NA,http://irna.ir,"en, ar, tr, es, ru, ur, de, fr, zh","FA, EN, AR, TR, ES, RU, UR, DE, FR, ZH",
+Asia,Palestine,Palestinian News and Agency Information,Ramallah,https://wafa.ps,"english, french, hebrew","AR, EN, FR, HE",News agency of the Palestinian national authority.
+Asia,Azerbaijan,Azerbaijan Television,N/A,https://www.aztv.az,,"AZ, EN, RU",State news Agency of Azerbaijan.
+Asia,India,All India Radio,New Delhi,https://newsonair.gov.in,,EN,???
+Asia,Saudi Arabia,Al Arabiya,Riyadh,https://alarabiya.net,"english, farsi, urdu","AR, FA, EN, UR","International telenews agency from KSA, based in Dubai."
+Asia,Saudi Arabia,Saudi Press Agency,Riyadh,https://www.spa.gov.sa,,"AR, EN, ZH, RU, FA",Official state news agency of KSA.
+Asia,Laos,Lao News Agency,N/A,http://kpl.gov.la,,"LO, EN, FR",Official state news agency of Lao PDR.
+Europe,Russian Federation,Sputnik,N/A,http://sputniknews.com,,"EN, RU",State ownership by Rossiya Segodnya.
+Europe,Russian Federation,Russia Today,Moscow,http://www.rt.com,"actualidad, arabic, russian, de, francais","EN, RU, AR, ES, DE, FR","Private ownership by ""TV-Anosti"", state funded."
+Europe,Russian Federation,TASS,Moscow,http://tass.ru,,RU,Russian news agency founded in 1904. Currently wholly owned by Russian government.
+Europe,Ukraine,TSN,N/A,http://tsn.ua,,UK,Unknown ownership.
+Europe,United Kingdom,British Broadcasting Corporation,London,http://www.bbc.com,,EN,
+North America,United States,Voice of America,"Washington, D.C.",https://voanews.com,,EN,Dozens of languages and local international versions.
+North America,United States,United States Africa Command,Stuttgart,http://www.africom.mil,,EN,Official news and infromation page of the United States Africa Command. (AFRICOM)
+North America,Canada,La Presse,Montreal,https://lapresse.ca,,FR,Private ownership
+North America,Cuba,Granma,N/A,http://www.granma.cu,en,ES,Offical paper of the Communist Party of Cuba.
+North America,Cuba,Prensa Latina,N/A,https://www.prensa-latina.cu,"frances, italiano","ES, FR, RU",
+South America,Venezuela,teleSUR,Caracas,http://telesurtv.net,,ES,"State/public ownership, with funding from Nicaragua and Cuba."
+Africa,Eritrea,Tesfa News,N/A,https://tesfanews.com,,"EN, TIG, TIR","State owned (presumably) ""pro-PFDJ) news outlet"""
+Africa,Eritrea,Shabait,Asmara,https://shabait.com,,"EN, TIG, TIR",Official page of the Ministry of Information of Eritrea.
+Africa,Nigeria,Federal Radio Corporation of Nigeria,Abuja,https://radionigeria.gov.ng,,EN,State radio of Nigeria.

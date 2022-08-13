@@ -1,13 +1,11 @@
 from copy import deepcopy
-from curses.ascii import CR
 from re import match
-from unicodedata import ucd_3_2_0
 
 import requests
 import html.parser as parser
 from bs4 import BeautifulSoup as Soup
 
-from allpress import lexical
+from allpress.lexical import word
 from allpress.db import models
 from allpress.settings import URL_REGEX, HREF_PARSE_REGEX
 
@@ -37,10 +35,11 @@ def _html_index_helper(urlp: str, crawler) -> set:
     
 
 class Crawler:
-    def __init__(self, root_url: str):
+    def __init__(self, root_url: str, source_name):
         self.root_url = root_url
         self.total_parsed = set()
         self.total_indexed = set()
+        self.source_name = source_name
 
     @classmethod
     def is_valid_url(self, url: str):

@@ -1,9 +1,12 @@
+import sys
+
+print(sys.path)
+sys.path.append('/home/hassan2022cbtest/allpress')
 import allpress
 import threading
 
 from importlib import reload
 from os import stat
-from sys import argv
 from time import sleep
 
 from allpress import web
@@ -32,17 +35,18 @@ def reloadit():
 
 if __name__ == '__main__':
     while True:
-        thread = threading.Thread(target=stat_file, args=('/home/hassan2022cbtest/allpress/src/allpress',))
+        thread = threading.Thread(target=stat_file, args=('/home/hassan2022cbtest/allpress/tests/.test.py',))
         thread.start()
+        allpress.add_all_countries_to_db()
         try:
-            test_crawl_url = 'https://irna.ir'
-            test_crawler = allpress.web.Crawler(test_crawl_url)
+            test_crawl_url = 'https://www.tesfanews.net'
+            test_crawler = allpress.web.Crawler(test_crawl_url, 'Tesfa News')
             test_crawler.index_site(iterations=1)
             pag_mods = []
             trans_mods = []
             for page in test_crawler.total_parsed:
                 try:
-                    modl= create_page_model(page)
+                    modl= create_page_model(page, 'Tesfa News')
                 except NoParagraphDataError:
                     continue
                 tmodl = create_translation_model(modl)

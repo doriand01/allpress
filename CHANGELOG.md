@@ -71,3 +71,14 @@ on `googletrans` library.
 ## 0.5.1a
 
 - Complete method to provide for migration of `TranslationModel`.
+
+## 0.6.0a
+### 6 August 2022
+
+
+- **Major update**
+- Major refactoring of package structure.
+- Add new database models, `StateModel` for individual countries, and `NewsSourceModel` for individual news sources.
+- Begin adding API methods for allpress, specifically `allpress.add_country_to_db()`, `allpress.add_all_countries_to_db()`, and `allpress.create_crawler`
+- Begin working on lexical analysis for search querying.
+- Add requirements.txt

@@ -31,7 +31,7 @@ def compile_p_text(url: str) -> str:
 
 def encapsulate_quotes(string: str) -> str:
     print(string)
-    return "$$" + string + "$$"
+    return "$$" + str(string) + "$$"
 
 
 def translate_page(text: str, src: str, dest: str) -> str:

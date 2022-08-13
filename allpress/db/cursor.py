@@ -2,9 +2,11 @@ from psycopg2.errors import *
 import psycopg2
 
 from allpress.settings import *
-from allpress.db.models import PageModel, TranslationModel
-from allpress.lexical import encapsulate_quotes
+from allpress.db.models import *
+from allpress.lexical.word import encapsulate_quotes
 from allpress.exceptions import ForeignKeyWithoutReferenceError
+
+from re import sub
 
 ### THIS VARIABLE SHOULD NOT CONTAIN LITERAL VALUES. CHANGE THE
 ### VALUES IN SETTINGS.PY.
@@ -38,7 +40,8 @@ ForeignKeyWithoutReferenceError.)
                                 column_names_and_types: dict, 
                                 primary_key=None, 
                                 foreign_key=None,
-                                reference_table=None) -> str:
+                                reference_table=None,
+                                reference_column=None) -> str:
         column_names_and_types_string = ''
         for key, val in zip(list(column_names_and_types.keys()), list(column_names_and_types.values())):
             if primary_key and key == primary_key:
@@ -46,7 +49,10 @@ ForeignKeyWithoutReferenceError.)
                 continue
   
             if (foreign_key and reference_table) and (key == foreign_key):
-                column_names_and_types_string += f'{key} {val} REFERENCES {reference_table}({foreign_key}),'
+                if reference_column:
+                    column_names_and_types_string += f'{key} {val} REFERENCES {reference_table}({reference_column}),'
+                else:
+                    column_names_and_types_string += f'{key} {val} REFERENCES {reference_table}({foreign_key}),'
                 continue
             elif foreign_key and not reference_table:
                 raise ForeignKeyWithoutReferenceError(f'Reference table not provided for foreign key {foreign_key}')
@@ -82,16 +88,18 @@ ForeignKeyWithoutReferenceError.)
                      column_names_and_types: dict,
                      primary_key=None,
                      foreign_key=None,
-                     reference_table=None):
+                     reference_table=None,
+                     reference_column=None):
         creation_query = Transactions.generate_create_table_query(
                             table,
                             column_names_and_types,
                             primary_key=primary_key,
                             foreign_key=foreign_key,
-                            reference_table=reference_table,)
+                            reference_table=reference_table,
+                            reference_column=reference_column)
+        print(creation_query)
         db_cursor.execute(creation_query)
         postgres_database_connection.commit()
-
 
 
 
@@ -120,14 +128,19 @@ def migrate_pages_to_db(pages: list):
             Transactions.create_table(
                 table_name,
                 PageModel.column_name_type_store,
-                primary_key='uid'
-            )
+                primary_key='uid',
+                foreign_key='news_source',
+                reference_table='pg_newssource',
+                reference_column='name',)
             Transactions.insert_rows(
                 table_name,
                 PageModel.column_names,
                 column_values
             )
-
+        except UniqueViolation:
+            print(f'Unique key constraint violation: {page["uid"]}. Rolling back database and skipping. Page with matching checksum already exists in this table.')
+            db_cursor.execute('ROLLBACK')
+            continue
 
 
 def migrate_translations_to_db(translation_objects: list):
@@ -155,3 +168,66 @@ def migrate_translations_to_db(translation_objects: list):
                 TranslationModel.column_names,
                 column_values
             )
+
+
+def migrate_states_to_db(state_objects: list):
+    table_name = 'pg_state'
+    for state in state_objects:
+        column_values = []
+        for column_name in StateModel.column_names:
+            if column_name == 'location':
+                column_values.append(str(state[column_name]).replace('[', '{').replace(']', '}'))
+                continue
+            column_values.append(state[column_name])
+        try:
+            Transactions.insert_rows(
+                table_name,
+                StateModel.column_names,
+                column_values
+            )
+        except UndefinedTable:
+            db_cursor.execute('ROLLBACK')
+            Transactions.create_table(
+                table_name,
+                StateModel.column_name_type_store,
+                primary_key='common_name'
+            )
+            Transactions.insert_rows(
+                table_name,
+                StateModel.column_names,
+                column_values
+            )
+        except UniqueViolation:
+            print(f'Unique key constraint violation: {state["official_name"]}. Rolling back database and skipping. State with matching official name already exists in this table.')
+            db_cursor.execute('ROLLBACK')
+            continue
+
+
+def migrate_news_sources_to_db(news_sources: list):
+    table_name = 'pg_newssource'
+    for news_source in news_sources:
+        column_values = []
+        for column_name in NewsSourceModel.column_names:
+            print(news_source[column_name])
+            column_values.append(news_source[column_name])
+        try:
+            Transactions.insert_rows(
+                table_name,
+                NewsSourceModel.column_names,
+                column_values)
+        except UndefinedTable:
+            db_cursor.execute('ROLLBACK')
+            Transactions.create_table(
+                table_name,
+                NewsSourceModel.column_name_type_store,
+                primary_key='name',
+                foreign_key='country',
+                reference_table='pg_state',
+                reference_column='common_name',)
+            Transactions.insert_rows(
+                table_name,
+                NewsSourceModel.column_names,
+                column_values)
+        except ForeignKeyViolation:
+            db_cursor.execute('ROLLBACK')
+            continue
