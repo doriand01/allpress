@@ -73,7 +73,7 @@ on `googletrans` library.
 - Complete method to provide for migration of `TranslationModel`.
 
 ## 0.6.0a
-### 6 August 2022
+### 13 August 2022
 
 
 - **Major update**
