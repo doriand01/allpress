@@ -82,3 +82,8 @@ on `googletrans` library.
 - Begin adding API methods for allpress, specifically `allpress.add_country_to_db()`, `allpress.add_all_countries_to_db()`, and `allpress.create_crawler`
 - Begin working on lexical analysis for search querying.
 - Add requirements.txt
+
+## 0.6.1a
+### 15 August 2022
+
+- Add new functions to the API, `select_news_source()` and `select_page()`. Allows you to query against the DB for specific news sources.

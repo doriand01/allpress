@@ -23,3 +23,9 @@ class URINotProvidedError(Exception):
 
     def __init__(self, msg):
         super().__init__(msg)
+
+
+class QueryError(Exception):
+
+    def __init__(self, msg):
+        super().__init__(msg)
