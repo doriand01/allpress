@@ -29,3 +29,15 @@ class QueryError(Exception):
 
     def __init__(self, msg):
         super().__init__(msg)
+
+
+class CoordinateError(Exception):
+
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
+class UnitError(Exception):
+
+    def __init__(self, msg):
+        super().__init__(msg)

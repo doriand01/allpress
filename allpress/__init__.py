@@ -1,11 +1,10 @@
-from inspect import Attribute
-from itertools import count
 from allpress.db import cursor
 from allpress.db import models
 from allpress.db import io
 from allpress.lexical import word
 from allpress.lexical import statistics
 from allpress import web
+from allpress import geo
 from allpress import settings
 from allpress import exceptions
 

@@ -87,3 +87,9 @@ on `googletrans` library.
 ### 15 August 2022
 
 - Add new functions to the API, `select_news_source()` and `select_page()`. Allows you to query against the DB for specific news sources.
+
+## 0.6.2a
+### 22 August 2022
+
+- Add `geo` module to allpress
+- Contains `Coordinate`, `Region` classes to help define areas of search queries

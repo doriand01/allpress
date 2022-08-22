@@ -19,3 +19,9 @@ CONTINENTS = [
 ]
 
 NEWS_SOURCE_CATALOG_FILE = '/home/hassan2022cbtest/allpress/sources.csv'
+
+EQUATORIAL_CIRCUMFERENCE = 24901.0
+MERIDIONAL_CIRCUMFERENCE = 24860.0
+
+
+VALID_UNITS = ['degrees', 'deg', 'miles', 'mi', 'kilometers', 'kilometres', 'km']
