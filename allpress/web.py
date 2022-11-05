@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup as Soup
 from allpress.lexical import word
 from allpress.db import models
 from allpress.settings import URL_REGEX, HREF_PARSE_REGEX
+from allpress import exceptions
 
 
 
@@ -55,6 +56,8 @@ class Crawler:
     def index_site(self, iterations=1):
         print(f'Making request to {self.root_url}...')
         response = requests.get(self.root_url)
+        if response.status_code != 200:
+            raise exceptions.BadWebResponseError(f'Non 200 status code: {response.status_code}')
         self.root_url = response.url
         print(f'Reponse received. Code: {response.status_code}')
 

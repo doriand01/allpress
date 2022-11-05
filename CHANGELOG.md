@@ -93,3 +93,9 @@ on `googletrans` library.
 
 - Add `geo` module to allpress
 - Contains `Coordinate`, `Region` classes to help define areas of search queries
+
+## 0.6.3a
+### 5 November 2022
+
+- Create test cases.
+- Improvements to the geolocation module.

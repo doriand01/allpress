@@ -1,8 +1,9 @@
 googletrans==3.1.0a0
 psycopg2>=2.9.3
 beautifulsoup4>=4.11.1
-geopy==2.20
+geopy==2.2.0
 spacy==3.4.1
 iso3166==2.1.1
 pycountry==22.3.5
 country-converter==0.7.7
+iso639

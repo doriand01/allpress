@@ -4,8 +4,9 @@ import math
 from allpress.settings import EQUATORIAL_CIRCUMFERENCE, MERIDIONAL_CIRCUMFERENCE, VALID_UNITS
 from allpress.exceptions import CoordinateError, UnitError
 
+from googletrans import Translator
+from country_converter import convert
 import geopy
-
 
 def _calculate_chord_length(r: float, d: float) -> float:
     return 2.0 * math.sqrt((r ** 2) - (d ** 2))
@@ -36,6 +37,7 @@ def _mile_to_lat(miles: float) -> float:
     return (miles/MERIDIONAL_CIRCUMFERENCE) * 360
 
 
+
 class Coordinate:
 
     def __init__(self, latitude: float, longitude: float):
@@ -53,6 +55,21 @@ class Coordinate:
         elif longitude:
             self.longitude = longitude
         self.location = self.geocoder.geocode(f'{self.latitude},{self.longitude}')
+
+    def get_country_from_coordinate(self) -> str:
+        import spacy
+        processor = spacy.load('en_core_web_sm')
+        address = self.geocoder.reverse(f'{self.latitude}, {self.longitude}')
+        translated = Translator().translate(address.address, dest='en')
+        processed = processor(translated.text)
+        ents = [ent.text for ent in processed.ents if ent.label_ == 'GPE']
+        for ent in ents:
+            converted_name = convert(ent, to='name_official')
+            if converted_name == 'not found':
+                continue
+            else:
+                return converted_name
+        return 'No state polity found at this coordinate.'
 
     def move_east(self, value: float, in_='miles'):
         if in_.lower() == 'miles' or in_.lower() == 'mi':
@@ -121,11 +138,6 @@ class Coordinate:
     
     def clone(self):
         return Coordinate(self.latitude, self.longitude)
-
-
-
-            
-
 
     def __str__(self):
         return f'<coord:({str(self.latitude)[:5]}..,{str(self.longitude)[:5]}..) near {self.location.address}>'
