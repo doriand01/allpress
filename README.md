@@ -99,3 +99,9 @@ on `googletrans` library.
 
 - Create test cases.
 - Improvements to the geolocation module.
+
+## 0.6.4a
+### 8 November 2022
+
+- Optimize `allpress.models.create_country_model()` function.
+- Fix bugs with page querying code.

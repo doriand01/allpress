@@ -14,7 +14,8 @@ from allpress import exceptions
 
 def _html_index_helper(urlp: str, crawler) -> set:
     parser = Soup(requests.get(urlp).content, 'html.parser')
-    urls_to_scan = set([url.attrs['href'] for url in list(parser.find_all('a'))])
+    testrls = list(parser.find_all('a'))
+    urls_to_scan = set([url.attrs['href'] for url in list(parser.find_all('a')) if 'href' in url.attrs.keys()])
     urls_found = set()
     for url in urls_to_scan:
         if crawler.root_url in url and url not in crawler.total_parsed:
@@ -38,6 +39,7 @@ def _html_index_helper(urlp: str, crawler) -> set:
 class Crawler:
     def __init__(self, root_url: str, source_name):
         self.root_url = root_url
+        if self.root_url[-1] != '/': self.root_url += '/'
         self.total_parsed = set()
         self.total_indexed = set()
         self.source_name = source_name
@@ -57,7 +59,7 @@ class Crawler:
         print(f'Making request to {self.root_url}...')
         response = requests.get(self.root_url)
         if response.status_code != 200:
-            raise exceptions.BadWebResponseError(f'Non 200 status code: {response.status_code}')
+            raise exceptions.BadWebResponseError(f'Non 200 status code: {response.status_code}, URL; {response.url}')
         self.root_url = response.url
         print(f'Reponse received. Code: {response.status_code}')
 

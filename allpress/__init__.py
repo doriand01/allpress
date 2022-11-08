@@ -50,7 +50,7 @@ def add_country_to_db(name: str):
 
 
 def add_news_sources_to_db(sources: list):
-    news_models =  models.create_news_source_model(sources)[1:]
+    news_models =  models.create_news_source_model(sources)
     cursor.migrate_news_sources_to_db(news_models)
 
 
@@ -121,4 +121,5 @@ def select_page(url=None,
     main_query += ';'
     cursor.db_cursor.execute(main_query)
     return cursor.db_cursor.fetchall()
-    
+
+

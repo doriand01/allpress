@@ -34,7 +34,7 @@ class PageModel(Model):
         'url'          : 'varchar(2048)',
         'home_url'     : 'varchar(2048)',
         'p_data'       : 'text',
-        'language'     : 'varchar(3)',
+        'language'     : 'varchar(10)',
         'news_source'  : 'varchar(128)',
         'uid'          : 'varchar(64)',
     }
@@ -67,7 +67,7 @@ class TranslationModel(Model):
     column_name_type_store = {
         'uid'                  : 'varchar(64)',
         'translation_text'     : 'text',
-        'translation_language' : 'varchar(3)',
+        'translation_language' : 'varchar(10)',
         'is_original'          : 'boolean',
         'is_official'          : 'boolean',
     }
@@ -217,8 +217,9 @@ def create_country_model(name) -> StateModel:
     geocoder = geopy.Nominatim(user_agent='allpress')
     common_name = coco.convert([name], to='name_short')
     official_name = coco.convert([name], to='name_official')
+    location = geocoder.geocode(official_name)
     try:
-        country_lat_long = [geocoder.geocode(official_name).latitude, geocoder.geocode(official_name).longitude]
+        country_lat_long = [location.latitude, location.longitude]
     except geopy.exc.GeocoderUnavailable:
         country_lat_long = [0.0, 0.0]
         print(f'Geocoder unavailable for {official_name} ({common_name}, lat long set to (0.0,0.0).')

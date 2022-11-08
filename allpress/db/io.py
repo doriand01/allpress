@@ -7,4 +7,4 @@ def import_news_sources_from_file(filepath: str) -> list:
     csv_values = []
     for line in csv_reader:
         csv_values.append(line)
-    return csv_values
+    return csv_values[1:]
