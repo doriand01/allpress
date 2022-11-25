@@ -5,8 +5,11 @@ import geopy
 import country_converter as coco
 from time import sleep
 
-from allpress.lexical.word import *
+from allpress.lang.word import *
 from allpress.exceptions import TranslationError, NoSuchColumnError
+from allpress.settings import logging
+
+logging.getLogger(__name__)
 
 
 class Model:
@@ -151,16 +154,18 @@ the page is known; therefore the function will attempt
 to compile all of the <p> tags on the page prior to
 instantiating the object.
 """
-def create_page_model(url: str, news_source: str) -> PageModel:
-    page_url = url
-    page_p_data = compile_p_text(page_url)
-    if not page_p_data:
-        raise NoParagraphDataError(f'{url} does not contain any <p> data to extract.')
-    page_language = detect_string_language(page_p_data)
-    page_model = PageModel(url=url, 
-                           home_url=' ', p_data=page_p_data, 
-                           news_source=news_source, language=page_language)
-    return page_model
+def create_page_models(urls: list[str], news_source: str) -> list[PageModel]:
+    models = []
+    for page_p_data, url in zip(compile_p_text(urls), urls):
+        if not page_p_data:
+            logging.error('Page does not contain any <p> data to extract. Skipping.')
+            continue
+        page_language = detect_string_language(page_p_data)
+        page_model = PageModel(url=url, 
+                            home_url=' ', p_data=page_p_data, 
+                            news_source=news_source, language=page_language)
+        models.append(page_model)
+    return models
 
 
 """Creates a translation model in the database, which
@@ -196,6 +201,7 @@ def create_translation_model(page: PageModel, target_language=None,
         translation_is_official = False
     elif target_language and not auto:
         if not text:
+            logging.critical('Cannot create translation model without text provided! Aborting.')
             raise TranslationError("""No text was provided for the translation. To 
                                    If you do not wish to use text for the translation
                                    enable auto=True.
@@ -251,6 +257,3 @@ def create_news_source_model(models: list) -> list:
             notes=notes,)
         model_list.append(news_source)
     return model_list
-
-
-

@@ -105,3 +105,15 @@ on `googletrans` library.
 
 - Optimize `allpress.models.create_country_model()` function.
 - Fix bugs with page querying code.
+
+## 0.7.0a
+### 24 November 2022
+
+**Major Update**
+- Add catalog index of scraped webpage urls, for search querying. Language gnostic. 
+- Major overhaul of web Crawler scraper code, now utilizes multithreading, is several times faster.
+- Refactor package for cleaner organization
+- `request_manager.RequestPoolManager` class to manage handling of rate limiting and multithreading of
+http requests.
+- `pg_translation` is no longer a single table for storing all translated versions of articles. It now discriminates based on language. This is done to make it possible for `tsquery()` in the database to be done across multiple languages.
+- Add SQL code to generate English and Spanish search columns in their respective `pg_translation` tables to allow `tsquery()` to be executed.

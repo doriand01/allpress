@@ -1,10 +1,11 @@
 from allpress.db import cursor
 from allpress.db import models
 from allpress.db import io
-from allpress.lexical import word
-from allpress.lexical import statistics
-from allpress import web
-from allpress import geo
+from allpress.lang import word
+from allpress.lang import statistics
+from allpress.net import web
+from allpress.net import request_managers
+from allpress.geo import geo
 from allpress import settings
 from allpress import exceptions
 
@@ -101,11 +102,16 @@ def select_news_source(continent=None,
 
 
 def select_page(url=None,
+                select_all=False,
                 home_url=None,
                 p_data=None,
                 language=None,
                 news_source=None,
                 uid=None):
+    if select_all:
+        main_query = 'SELECT * FROM pg_page'
+        cursor.db_cursor.execute(main_query)
+        return cursor.db_cursor.fetchall()
     if not any([url, home_url, p_data, language, news_source, uid]):
         raise exceptions.QueryError("You did not provide any values to query by. At least one is required.")
     main_query = 'SELECT * FROM pg_page WHERE '

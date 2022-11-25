@@ -11,7 +11,7 @@ from os import stat
 from time import sleep
 from random import random, randint
 
-from allpress import web
+from net import web
 from allpress.db import cursor
 from allpress.db.models import create_page_model, create_translation_model
 from allpress.exceptions import NoParagraphDataError
@@ -76,6 +76,5 @@ class TestAllpressGeoCoordinate(unittest.TestCase):
         
 
 if __name__ == '__main__':
-    allpress.queryall_func()
     unittest.main()
 

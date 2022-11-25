@@ -3,7 +3,7 @@ import psycopg2
 
 from allpress.settings import *
 from allpress.db.models import *
-from allpress.lexical.word import encapsulate_quotes
+from allpress.lang.word import encapsulate_quotes, get_language_name_from_iso639
 from allpress.exceptions import ForeignKeyWithoutReferenceError
 
 from re import sub
@@ -55,9 +55,11 @@ ForeignKeyWithoutReferenceError.)
                     column_names_and_types_string += f'{key} {val} REFERENCES {reference_table}({foreign_key}),'
                 continue
             elif foreign_key and not reference_table:
+                logging.critical(f'Reference table not provided for foreign key {foreign_key}! Abort.')
                 raise ForeignKeyWithoutReferenceError(f'Reference table not provided for foreign key {foreign_key}')
             column_names_and_types_string += f'{key} {val},'
 
+    
         return f'CREATE TABLE {table_name} ({column_names_and_types_string[:-1]})'
     
 
@@ -80,6 +82,13 @@ ForeignKeyWithoutReferenceError.)
                             encapsulated_values)
         db_cursor.execute(insert_query)
         postgres_database_connection.commit()
+
+    def select_rows(self,
+                     table: str,
+                     all=False,
+                     **filters):
+        pass
+        
     
 
     @classmethod
@@ -102,16 +111,11 @@ ForeignKeyWithoutReferenceError.)
         postgres_database_connection.commit()
 
 
-
-
-
-    
-
 """Migrates list of PageModel objects to the database.\n\n
 pages: list (List of PageModel objects to be migrated
 to the database.)
 """
-def migrate_pages_to_db(pages: list):
+def migrate_pages_to_db(pages: list[PageModel]):
     table_name = 'pg_page'
     for page in pages:
         column_values = []
@@ -124,6 +128,8 @@ def migrate_pages_to_db(pages: list):
                 column_values
             )
         except UndefinedTable:
+            logging.warning('Page table is not defined in the database for pg_page. Creating.')
+            logging.info('Rolling back PostgreSQL database to previous state.')
             db_cursor.execute('ROLLBACK')
             Transactions.create_table(
                 table_name,
@@ -138,14 +144,16 @@ def migrate_pages_to_db(pages: list):
                 column_values
             )
         except UniqueViolation:
+            logging.warning('Unique constraint violation for uid. Perhaps this page is already in the database?')
             print(f'Unique key constraint violation: {page["uid"]}. Rolling back database and skipping. Page with matching checksum already exists in this table.')
+            logging.info('Rolling back PostgreSQL database to previous state.')
             db_cursor.execute('ROLLBACK')
             continue
 
 
-def migrate_translations_to_db(translation_objects: list):
-    table_name = 'pg_translation'
+def migrate_translations_to_db(translation_objects: list[TranslationModel]):
     for translation in translation_objects:
+        table_name = f'pg_translation_{translation["translation_language"]}'
         column_values = []
         for column_name in TranslationModel.column_names:
             column_values.append(translation[column_name])
@@ -170,7 +178,7 @@ def migrate_translations_to_db(translation_objects: list):
             )
 
 
-def migrate_states_to_db(state_objects: list):
+def migrate_states_to_db(state_objects: list[StateModel]):
     table_name = 'pg_state'
     for state in state_objects:
         column_values = []
@@ -203,7 +211,7 @@ def migrate_states_to_db(state_objects: list):
             continue
 
 
-def migrate_news_sources_to_db(news_sources: list):
+def migrate_news_sources_to_db(news_sources: list[NewsSourceModel]):
     table_name = 'pg_newssource'
     for news_source in news_sources:
         column_values = []
