@@ -10,20 +10,21 @@ from allpress.exceptions import *
 
 logging.getLogger(__name__)
 
-fallback_language_detector = LanguageDetectorBuilder.from_all_languages().build()
-primary_language_detector = Translator().detect
+primary_language_detector = LanguageDetectorBuilder.from_all_languages().build()
+fallback_language_detector = Translator().detect
 
 """Uses google translate to detect the language of a string."""
 def detect_string_language(text: str) -> str:
     try:
-        language_iso_code = primary_language_detector(text).lang.upper() 
+        language_iso_code = primary_language_detector.detect_language_of(text).iso_code_639_1.name
         return language_iso_code
     except Exception:
         try:
-            language_iso_code = fallback_language_detector.detect_language_of(text).iso_code_639_1.name
+            logging.warning(f'Primary language detector failed! Using fallback language detector.')
+            language_iso_code = fallback_language_detector(text).lang.upper() 
             return language_iso_code
         except Exception:
-            logging.warning('Fallback language detector failed. Assigining not-null default value.')
+            logging.critical('Fallback language detector failed. Assigining not-null default value.')
             return 'XX'
 
 
@@ -33,7 +34,11 @@ def compile_p_text(urls: list) -> list[str]:
     manager = request_managers.HTTPRequestPoolManager()
     compiled_pages = []
     for response_future in manager.execute_request_batch(urls):
-        parser = Soup(response_future.result().content, 'html.parser')
+        response = response_future.result()
+        if not response.request:
+            logging.error('Empty bad response when compiling <p> text! Returning non-null placeholder value.')
+            return ['NULLVAL']
+        parser = Soup(response.content, 'html.parser')
         p_tags = [tag.text for tag in parser.find_all('p')]
         compiled_pages.append('\n'.join(p_tags))
     return compiled_pages

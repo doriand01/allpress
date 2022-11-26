@@ -117,3 +117,10 @@ on `googletrans` library.
 http requests.
 - `pg_translation` is no longer a single table for storing all translated versions of articles. It now discriminates based on language. This is done to make it possible for `tsquery()` in the database to be done across multiple languages.
 - Add SQL code to generate English and Spanish search columns in their respective `pg_translation` tables to allow `tsquery()` to be executed.
+
+## 0.7.1a
+### 26 November 2022
+
+- Updates to web crawler, database insertion function to make web crawling more accurate
+- Updated URL verification regex.
+- Fixed URL regex matching bugs.

@@ -8,16 +8,20 @@ from bs4 import BeautifulSoup as Soup
 from allpress.lang import word
 from allpress.net import request_managers
 from allpress.db import models
-from allpress.settings import URL_REGEX, WEB_CRAWLER_OUTPUT_FOLDER
+from allpress.settings import URL_REGEX, WEB_CRAWLER_OUTPUT_FOLDER, logging
 from allpress import exceptions
 
-
+logging.getLogger(__name__)
 
 def _html_index_helper(urls: list, crawler) -> set:
     urls_found = set()
     manager = request_managers.HTTPRequestPoolManager()
     for response_future in manager.execute_request_batch(urls):
-        parser = Soup(response_future.result().content, 'html.parser')
+        response = response_future.result()
+        if not response.request:
+            logging.warning('Empty response object! Skipping scraping for this page.')
+            continue
+        parser = Soup(response.content, 'html.parser')
         urls_to_scan = set([url.attrs['href'] for url in list(parser.find_all('a')) if 'href' in url.attrs.keys()])
         for url in urls_to_scan:
             if crawler.root_url in url and url not in crawler.total_parsed:
@@ -25,11 +29,16 @@ def _html_index_helper(urls: list, crawler) -> set:
                 # if they are not already in the Crawler object's stored list of previously
                 # discovered URLs.
                 urls_found.add(url)
-            elif crawler.root_url not in url and url not in crawler.total_parsed:
-                print(f'{url} does not contain the root. Attempting to match to regex to see if it is a valid url...')
-                joined_url = '/'.join([crawler.root_url, url])
+                logging.info(f'Adding url {url} to the index.')
+            elif crawler.core_url not in url and url not in crawler.total_parsed:
+                logging.info(f'{url} does not contain the root. Attempting to match to regex to see if it is a valid url...')
+                joined_url = f'{crawler.root_url}/{url}'
                 if Crawler.is_valid_url(joined_url):
+                    logging.info(f'{joined_url} matches with verification regex. Adding to the index.')
                     urls_found.add(joined_url)
+                elif url.startswith('//') and Crawler.is_valid_url(url[2:]) and crawler.core_url in url:
+                    logging.info(f'{url[2:]} matches with verification regex. Adding to the index.')
+                    urls_found.add(url[2:])
     
     
     
@@ -37,9 +46,10 @@ def _html_index_helper(urls: list, crawler) -> set:
 
     
 class Crawler:
+
     def __init__(self, root_url: str, source_name):
         self.root_url = root_url
-        if self.root_url[-1] != '/': self.root_url += '/'
+        self.core_url = match(URL_REGEX, root_url).groups()[2]
         self.total_parsed = set()
         self.to_scan = set()
         self.total_indexed = set()

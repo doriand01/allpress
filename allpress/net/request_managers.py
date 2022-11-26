@@ -53,8 +53,14 @@ class HTTPRequestPoolManager:
 
 
     def _execute_request(self, url: str) -> requests.models.Response:
-        return requests.get(url)
-
+        try:
+            response = requests.get(url)
+            logging.info(f'Response from {url} received. Status code {response.status_code}')
+            return response
+        except Exception as error:
+            logging.error(f'Request to {url} failed with exception!; {error}.')
+            logging.error(f'Generating empty response object as placeholder.')
+            return requests.models.Response()
 
     def _execute_pool(self):
         pool_executor = concurrent.futures.ThreadPoolExecutor()
@@ -62,26 +68,32 @@ class HTTPRequestPoolManager:
             if len(self._request_pool) > 0:
                 for request_url in self._request_pool:
                     if self._get_state() <= 1:
+                        logging.info('Low request load. Sending request immediately.')
                         self.n_active_concurrent_requests += 1
                         self._request_pool.remove(request_url)
                         self._pool_futures.append(pool_executor.submit(self._execute_request, request_url))
+                        logging.info(f'Request to {request_url} sent to ThreadPoolExecutor.')
                     if self._get_state() == 2:
+                        logging.info('Light load. Rate limiting by sleeping for 0.01 secounds')
                         sleep(0.01)
                         self.n_active_concurrent_requests += 1
                         self._request_pool.remove(request_url)
                         self._pool_futures.append(pool_executor.submit(self._execute_request, request_url))
+                        logging.info(f'Request to {request_url} sent to ThreadPoolExecutor.')
                     if self._get_state() == 3:
                         logging.info('Moderate request load. Rate limiting by sleeping for 0.25 seconds.')
                         sleep(0.25)
                         self.n_active_concurrent_requests += 1
                         self._request_pool.remove(request_url)
                         self._pool_futures.append(pool_executor.submit(self._execute_request, request_url))
+                        logging.info(f'Request to {request_url} sent to ThreadPoolExecutor.')
                     if self._get_state() == 4:
                         logging.warning('Heavy load. Throttling by half a second.')
                         sleep(0.5)
                         self.n_active_concurrent_requests += 1
                         self._request_pool.remove(request_url)
                         self._pool_futures.append(pool_executor.submit(self._execute_request, request_url))
+                        logging.info(f'Request to {request_url} sent to ThreadPoolExecutor.')
             elif len(self._request_pool) == 0:
                 self._pool_manager_active = False
 
@@ -100,5 +112,3 @@ class HTTPRequestPoolManager:
 
 
 
-
-    

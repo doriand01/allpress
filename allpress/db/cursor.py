@@ -80,6 +80,7 @@ ForeignKeyWithoutReferenceError.)
                             table,
                             column_names,
                             encapsulated_values)
+
         db_cursor.execute(insert_query)
         postgres_database_connection.commit()
 
@@ -144,11 +145,17 @@ def migrate_pages_to_db(pages: list[PageModel]):
                 column_values
             )
         except UniqueViolation:
-            logging.warning('Unique constraint violation for uid. Perhaps this page is already in the database?')
+            logging.error('Unique constraint violation for uid. Perhaps this page is already in the database?')
             print(f'Unique key constraint violation: {page["uid"]}. Rolling back database and skipping. Page with matching checksum already exists in this table.')
             logging.info('Rolling back PostgreSQL database to previous state.')
             db_cursor.execute('ROLLBACK')
             continue
+        except SyntaxError:
+            logging.error('Invalid data in database query! Check to make sure strings are properly encoded.')
+            logging.warning('Object could not be migrated to the database.')
+            db_cursor.execute('ROLLBACK')
+            continue
+        
 
 
 def migrate_translations_to_db(translation_objects: list[TranslationModel]):
@@ -176,6 +183,12 @@ def migrate_translations_to_db(translation_objects: list[TranslationModel]):
                 TranslationModel.column_names,
                 column_values
             )
+        except SyntaxError:
+            logging.error('Invalid data in database query! Check to make sure strings are properly encoded.')
+            logging.warning('Object could not be migrated to the database.')
+            db_cursor.execute('ROLLBACK')
+            continue
+
 
 
 def migrate_states_to_db(state_objects: list[StateModel]):

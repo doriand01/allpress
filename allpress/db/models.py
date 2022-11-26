@@ -1,9 +1,10 @@
 from hashlib import md5
 from os import urandom
+from time import sleep
+from concurrent.futures import ThreadPoolExecutor
 
 import geopy
 import country_converter as coco
-from time import sleep
 
 from allpress.lang.word import *
 from allpress.exceptions import TranslationError, NoSuchColumnError
@@ -157,13 +158,14 @@ instantiating the object.
 def create_page_models(urls: list[str], news_source: str) -> list[PageModel]:
     models = []
     for page_p_data, url in zip(compile_p_text(urls), urls):
+        executor = ThreadPoolExecutor(max_workers=1)
         if not page_p_data:
             logging.error('Page does not contain any <p> data to extract. Skipping.')
             continue
-        page_language = detect_string_language(page_p_data)
+        page_language_future = executor.submit(detect_string_language, page_p_data)
         page_model = PageModel(url=url, 
                             home_url=' ', p_data=page_p_data, 
-                            news_source=news_source, language=page_language)
+                            news_source=news_source, language=page_language_future.result())
         models.append(page_model)
     return models
 

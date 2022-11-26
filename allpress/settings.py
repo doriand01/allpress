@@ -11,7 +11,7 @@ POSTGRESQL_DATABASE_NAME   = 'postgres'
 POSTGRESQL_USERNAME        = 'postgres'
 POSTGRESQL_PASSWORD        = 'test0000'
 
-URL_REGEX = '((http|https):\/\/)?((www|ww\d|www\d)\.)?(?=.{5,255})([\w-]{2,63}\.)+\w{2,63}(\/[\w\-._~:?#@!$&\'\(\)*+,;%=]+)*'
+URL_REGEX = '((http|https):\/\/)?(((www|ww\d|www\d)\.)?(?=.{5,255})([\w-]{2,63}\.)+\w{2,63})(\/[\w\-._~:?#@!$&\'\(\)*+,;%=]+)*\/?'
 HREF_PARSE_REGEX = '(?<=<a\shref=([\'"]))([\w\-._~:?#@!$&/\'\(\)*+,;%=]+)\1'
 
 CONTINENTS = [
