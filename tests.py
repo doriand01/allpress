@@ -18,7 +18,7 @@ from allpress.exceptions import NoParagraphDataError
 
 import unittest
 
-sources = allpress.io.import_news_sources_from_file('C:\\Users\\preit\\OneDrive\\Desktop\\coding projects\\allpress\\sources.csv')
+sources = allpress.query.import_news_sources_from_file('C:\\Users\\preit\\OneDrive\\Desktop\\coding projects\\allpress\\sources.csv')
 
 
 def randomize_test_site():

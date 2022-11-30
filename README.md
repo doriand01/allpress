@@ -124,3 +124,10 @@ http requests.
 - Updates to web crawler, database insertion function to make web crawling more accurate
 - Updated URL verification regex.
 - Fixed URL regex matching bugs.
+
+## 0.7.2a
+### 29 November 2022
+
+- Implement rudimentary full text SQL searches through the `allpress.search_by_text()` method.
+- class `io.Indexer` has been removed.
+- module `allpress.db.io` has been refactored to `allpress.db.query`

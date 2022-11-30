@@ -33,7 +33,7 @@ class HTTPRequestPoolManager:
     Returns the load of the RequestPoolManager as a State value.
     Calculated from the maximum number of allowed concurrent requests
     `self.max_concurrent_requests` divided by the total number of
-    active concurrent requests.
+    active concurrent requests by the _get_load function.
     """
     def _get_state(self):
         if self._get_load() < 20.0:

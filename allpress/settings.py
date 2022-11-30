@@ -10,6 +10,7 @@ POSTGRESQL_SERVER_HOST     = '127.0.0.1'
 POSTGRESQL_DATABASE_NAME   = 'postgres'
 POSTGRESQL_USERNAME        = 'postgres'
 POSTGRESQL_PASSWORD        = 'test0000'
+POSTGRESQL_QUERY_PATH = 'C:\\Users\\preit\\OneDrive\\Desktop\\coding projects\\allpress\\sql'
 
 URL_REGEX = '((http|https):\/\/)?(((www|ww\d|www\d)\.)?(?=.{5,255})([\w-]{2,63}\.)+\w{2,63})(\/[\w\-._~:?#@!$&\'\(\)*+,;%=]+)*\/?'
 HREF_PARSE_REGEX = '(?<=<a\shref=([\'"]))([\w\-._~:?#@!$&/\'\(\)*+,;%=]+)\1'

@@ -1,6 +1,6 @@
 from allpress.db import cursor
 from allpress.db import models
-from allpress.db import io
+from allpress.db import query
 from allpress.lang import word
 from allpress.lang import statistics
 from allpress.net import web
@@ -18,7 +18,7 @@ from hashlib import md5
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-import_news_sources_from_file = io.import_news_sources_from_file
+import_news_sources_from_file = query.import_news_sources_from_file
 
 def add_all_countries_to_db():
     all_countries = pycountry.countries
@@ -127,5 +127,12 @@ def select_page(url=None,
     main_query += ';'
     cursor.db_cursor.execute(main_query)
     return cursor.db_cursor.fetchall()
+
+def search_by_text(text_query: str, language='EN') -> list:
+    try:
+        return query.execute_text_search_tsquery(text_query, language_as_iso_code=language)
+    except Exception as e:
+        print(e)
+
 
 
