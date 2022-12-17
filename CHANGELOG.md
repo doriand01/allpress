@@ -131,3 +131,9 @@ http requests.
 - Implement rudimentary full text SQL searches through the `allpress.search_by_text()` method.
 - class `io.Indexer` has been removed.
 - module `allpress.db.io` has been refactored to `allpress.db.query`
+
+## 0.7.3a
+### 10 December 2022
+
+- Complete documentation for non private functions.
+- Change license to GPL v3.

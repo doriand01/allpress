@@ -8,6 +8,11 @@ logging.getLogger(__name__)
 
 from time import sleep
 
+
+"""
+Enum style class that defines load state \n
+values for `HTTPRequestPoolManager`.
+"""
 class States:
     LOW = 0
     LIGHT = 1
@@ -97,7 +102,7 @@ class HTTPRequestPoolManager:
             elif len(self._request_pool) == 0:
                 self._pool_manager_active = False
 
-    def execute_request_batch(self, batch: list) -> list:
+    def execute_request_batch(self, batch: list) -> list: 
         logging.info(f'Executing request batch of {len(batch)} requests.')
         self.n_active_concurrent_requests += len(batch)
         self._request_pool = self._request_pool + batch

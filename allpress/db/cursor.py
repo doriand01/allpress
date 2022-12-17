@@ -21,19 +21,33 @@ db_cursor = postgres_database_connection.cursor()
 
 
 class Transactions:
+    """
+    Transactions: Helper class to assist in interactions with PostgreSQL \n
+    database. Only contains functions and is not an object on its own.\n
+    \n
+    functions;\n
+    generate_create_table_query(\n
+        self \n
+        table_name: str \n
+        column_names_and_types: dict \n
+        primary_key=None: str \n
+        foreign_key=None: str \n
+        reference_table=None: str \n
+        reference_column=None: str \n
+        ) -> str\n
+    generate_insertion_query(self \n
+        table_name: str, \n
+        column_names=[]: list: \n
+        values=[]: list \n
+        ) -> str:\n
+    move_east(self, value: float, in_='miles')\n
+    move_west(self, value: float, in_='miles')\n
+    move_north(self, value: float, in_='miles')\n
+    move_south(self, value: float, in_='miles')\n
+    clone(self)\n
+    """
 
 
-    """Generates a query to create a new table in the database. \n\n
-table name: str (Name of table to be created) \n
-column_names_and_types: dict (Key-value dictionary containing
-tha name of every column and the column's datatype. Refer to
-allpress.db.models.Model classes.) \n
-**primary_key: str (Sets primary key in table. Optional argument.) \n
-**foreign_key: str (Sets foreign keys in table. Optional argument.) \n
-**reference_table: (Sets reference table for foreign key. Optional
-argument, but required when foreign_key is used, or will raise 
-ForeignKeyWithoutReferenceError.)
-"""
     @classmethod
     def generate_create_table_query(self,
                                 table_name: str, 
@@ -42,6 +56,17 @@ ForeignKeyWithoutReferenceError.)
                                 foreign_key=None,
                                 reference_table=None,
                                 reference_column=None) -> str:
+        """Generates a query to create a new table in the database. \n\n
+        table name: str (Name of table to be created) \n
+        column_names_and_types: dict (Key-value dictionary containing
+        tha name of every column and the column's datatype. Refer to
+        allpress.db.models.Model classes.) \n
+        **primary_key: str (Sets primary key in table. Optional argument.) \n
+        **foreign_key: str (Sets foreign keys in table. Optional argument.) \n
+        **reference_table: (Sets reference table for foreign key. Optional
+        argument, but required when foreign_key is used, or will raise 
+        ForeignKeyWithoutReferenceError.)
+        """
         column_names_and_types_string = ''
         for key, val in zip(list(column_names_and_types.keys()), list(column_names_and_types.values())):
             if primary_key and key == primary_key:
@@ -63,13 +88,14 @@ ForeignKeyWithoutReferenceError.)
         return f'CREATE TABLE {table_name} ({column_names_and_types_string[:-1]})'
     
 
-    """Generates an insertion query for a single row.  \n\n
-    table_name: str (The name of the table to be modified) \n
-    column_names: list (Names of the columns in the table to be modified) \n
-    values: list (Values to be inserted into the table)
-    """
+
     @classmethod
     def generate_insertion_query(self, table_name: str, column_names=[], values=[]) -> str:
+        """Generates an insertion query string for a single row.  \n\n
+        table_name: str (The name of the table to be modified) \n
+        column_names: list (Names of the columns in the table to be modified) \n
+        values: list (Values to be inserted into the table)
+        """
         return f'INSERT INTO {table_name} ({", ".join(column_names)}) VALUES ({", ".join(values) });'
 
     
@@ -84,14 +110,7 @@ ForeignKeyWithoutReferenceError.)
         db_cursor.execute(insert_query)
         postgres_database_connection.commit()
 
-    def select_rows(self,
-                     table: str,
-                     all=False,
-                     **filters):
-        pass
-        
     
-
     @classmethod
     def create_table(self, 
                      table: str, 

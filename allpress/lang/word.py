@@ -13,8 +13,20 @@ logging.getLogger(__name__)
 primary_language_detector = LanguageDetectorBuilder.from_all_languages().build()
 fallback_language_detector = Translator().detect
 
-"""Uses google translate to detect the language of a string."""
+
 def detect_string_language(text: str) -> str:
+    """
+    detect_string_langauge(text: str): Detects what language a given string is. \n
+    Uses a primary and secondary (fallback) detector to detect languages. The \n
+    primary detector uses `lingua`'s language detection capabilities. In the event \n
+    that this fails, it falls back to using google translate's language detection \n
+    capabilities. In the event the fallback detector fails, a not-null default value \n
+    in the shape of an ISO 639 language value is returned. \n
+    args; \n
+    text: str \n
+    \n
+    returns `str`
+    """
     try:
         language_iso_code = primary_language_detector.detect_language_of(text).iso_code_639_1.name
         return language_iso_code
@@ -28,9 +40,20 @@ def detect_string_language(text: str) -> str:
             return 'XX'
 
 
-"""Compiles all <p> data from the url into a single string.
-"""
-def compile_p_text(urls: list) -> list[str]:
+
+def compile_p_text(urls: list[str]) -> list[str]:
+    """
+    compile_p_text(urls: list[str]): This function compiles all of the \n
+    text contained inside `<p>` tags on a web page into one single string. \n
+    this function is designed to operate on URLs in batches, so it takes a \n
+    list of strings containing the URLs to be compiled as an argument. The \n
+    value returned is also a list of strings, each individual string containing \n
+    the compiled <p> data from the URLs that were passed to the function. \n
+    args; \n
+    urls: list[str] (List of URLs from which the <p> data is to be compiled.) \n
+    \n
+    returns list[str]
+    """
     manager = request_managers.HTTPRequestPoolManager()
     compiled_pages = []
     for response_future in manager.execute_request_batch(urls):
@@ -43,15 +66,40 @@ def compile_p_text(urls: list) -> list[str]:
         compiled_pages.append('\n'.join(p_tags))
     return compiled_pages
 
-"""Encapsulates string data in SQL-type quotation marks,
-in order to reduce chance of syntax errors in database values. 
-"""
+
 def encapsulate_quotes(string: str) -> str:
+    """
+    encapsulate_quotes(string: str): Encapsulates text data to be inserted \n
+    in the database in double dollar sign quotes. So for example, "test" becomes \n
+    $$test$$. Double dollar signs are used instead of normal quotes to prevent
+    quote characters in the text data from breaking the quote in the insertion \n
+    Query. If the text itself contains double dollar signs, then it will break \n
+    the query. This is a known bug that must be fixed. \n
+    args; \n
+    string: str (The string whose data is to be enclosed in dollar quotes) \n
+    \n
+    returns `str` \n
+    """
     print(string)
     return "$$" + str(string) + "$$"
 
 
 def translate_page(text: str, src: str, dest: str) -> str:
+    """
+    translate_page(text: str, src: str, dest: str): Translates a given string of \n
+    text from a source language into a destination language. Uses the \n
+    `Translator` object from the `googletrans` module. Has the same limitations \n
+    in translation accuracy as google translate. \n
+    args; \n
+    text: str (Text of the string to be translated.)
+    src: str (Source language. Should be in ISO 639 format. \n
+    in other words, should be a two or three letter value that \n
+    represents that language. eg. EN for 'English', ES for 'Spanish') \n
+    dest: str (Destination language. Should be in ISO 639 format like \n
+    `src`.)\n
+    \n
+    returns `str` 
+    """
     translator = Translator()
     result = translator.translate(text, src=src, dest=dest).text
     return result
@@ -60,6 +108,17 @@ def translate_page(text: str, src: str, dest: str) -> str:
 def remove_fragment(url: str) -> str:
     return url.split('#')[0]
 
+
+
 def get_language_name_from_iso639(iso_code: str) -> str:
+    """
+    get_langauge_name_from_iso639(iso_code: str): Returns the full \n
+    name for a language given its ISO 639 code. For example, passing \n
+    'EN' into the function should return 'English'.
+    args; \n
+    iso_code: str (ISO code of the language to be converted.) \n
+    \n
+    returns `str`
+    """
     return iso639.to_name(iso_code)
     

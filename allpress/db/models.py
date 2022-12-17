@@ -26,13 +26,20 @@ class Model:
         return getattr(self, f'pg_{self.__class__.__name__.lower().replace("model", "")}_{val}')
 
 """
-`PageModel` is the class which models the `page` table in the Postgres database.
-The page model contains columns which encapsulate the following data relating to
-each indexed page: its url, the root url of the website, the `<p>` tag data
-contained within the table, the language of the page, and translations for that
-page.
+`PageModel` 
 """
+
 class PageModel(Model):
+    """
+    PageModel: is the class which models the `page` table in the Postgres database. \n
+    The page model contains columns which encapsulate the following data relating to \n
+    each indexed page: its url, the root url of the website, the `<p>` tag data \n
+    contained within the table, the language of the page, and translations for that \n
+    page. It is a child class of the Model class. All Model classes and child classes\n
+    have no publicly accessible functions, only attributes which help Model a row in \n
+    the database table.
+    \n
+    """
 
     column_name_type_store = {
         'url'          : 'varchar(2048)',
@@ -67,7 +74,18 @@ translation is the original translation of the text, and if it is an offical,
 human verified translation.
 """
 class TranslationModel(Model):
-    
+    """
+    PageModel:  is the class which models the `translation` table in the Postgres\n
+    database. The translation model contains columns which encapsulate the following data\n 
+    relating to each translations in the text of each indexed page: the page's uid in the\n
+    database, the text of the translation, the language of the translation, if the\n
+    translation is the original translation of the text, and if it is an offical,\n
+    human verified translation. All Model classes and child classes\n
+    have no publicly accessible functions, only attributes which help Model a row in \n
+    the database table.
+    \n
+    """
+
     column_name_type_store = {
         'uid'                  : 'varchar(64)',
         'translation_text'     : 'text',
@@ -170,24 +188,25 @@ def create_page_models(urls: list[str], news_source: str) -> list[PageModel]:
     return models
 
 
-"""Creates a translation model in the database, which
-is simply any stored written version of the article in
-any language. It can be done automatically via the
-googletrans module, or a human written piece of text
-can be used as the translation. A translation is
-"original" if it is the original translation of the
-article (Original article), and is "official" if it
-has been verified as accurate by a human.\n
-page: PageModel (The PageModel object the translation
-is to be generated from.) \n
-**target_language: str (Language to translate to.) \n
-auto=True: bool (Use automatic translation or not.
-auto translations use google translate,) \n
-text=None: str (Optional argument to use human written
-text for a translation. Must not be none if auto=False.)
-"""
+
 def create_translation_model(page: PageModel, target_language=None,
                              auto=True, text=None) -> TranslationModel:
+    """Creates a translation model in the database, which
+    is simply any stored written version of the article in
+    any language. It can be done automatically via the
+    googletrans module, or a human written piece of text
+    can be used as the translation. A translation is
+    "original" if it is the original translation of the
+    article (Original article), and is "official" if it
+    has been verified as accurate by a human.\n
+    page: PageModel (The PageModel object the translation
+    is to be generated from.) \n
+    **target_language: str (Language to translate to.) \n
+    auto=True: bool (Use automatic translation or not.
+    auto translations use google translate,) \n
+    text=None: str (Optional argument to use human written
+    text for a translation. Must not be none if auto=False.)
+    """
     page_uid = page['uid']
     if not target_language:
         translation_text = page['p_data']

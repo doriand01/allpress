@@ -56,7 +56,7 @@ def add_news_sources_to_db(sources: list):
 
 
 def get_uid_from_url(url: str) -> str:
-    page_p_data =  word.compile_p_text(url)
+    page_p_data =  word.compile_p_text([url])
     hashobj = md5()
     hashobj.update(bytes(str(word.remove_fragment(url)+page_p_data).encode('utf-8')))
     uid = hashobj.hexdigest()

@@ -13,7 +13,7 @@ from allpress import exceptions
 
 logging.getLogger(__name__)
 
-def _html_index_helper(urls: list, crawler) -> set:
+def _html_index_helper(urls: list, crawler) -> set[str]:
     urls_found = set()
     manager = request_managers.HTTPRequestPoolManager()
     for response_future in manager.execute_request_batch(urls):
@@ -44,10 +44,26 @@ def _html_index_helper(urls: list, crawler) -> set:
     
     return urls_found
 
-    
-class Crawler:
 
-    def __init__(self, root_url: str, source_name):
+
+class Crawler:
+    """
+    Crawler: Object to crawl an individual website. Meant for one web \n
+    site only, if another web site needs to be crawled, another crawler object \n
+    should be created. eg. one for https://bbc.co.uk/ another for https://cnn.com. \n
+    \n
+    functions;\n
+
+    @classmethod: is_valid_url(self, url: str) -> bool \n
+    get_root_url(self) -> str \n
+    index_site(self, iterations=1) \n
+    output_scraped_urls(self) \n
+    \n
+    instantiation;
+    __init__(self, root_url: str, source_name: str)
+    """  
+
+    def __init__(self, root_url: str, source_name: str):
         self.root_url = root_url
         self.core_url = match(URL_REGEX, root_url).groups()[2]
         self.total_parsed = set()
@@ -55,18 +71,49 @@ class Crawler:
         self.total_indexed = set()
         self.source_name = source_name
 
+
     @classmethod
-    def is_valid_url(self, url: str):
+    def is_valid_url(self, url: str) -> bool:
+        """
+        is_valid_url(self, url): This method checks a given URL inside a \n
+        string in order to determine if it is a valid URL. Returns \n
+        `True` if it matches with the regex and returns `False` if it \n
+        doesn't. \n
+        args; \n
+        self: allpress.net.web.Crawler (Instance reference for Crawler object) \n
+        url: str (The URL to be validated.) \n
+        \n 
+        returns `bool` \n
+        """
         regex_match = match(URL_REGEX, url)
         if regex_match and regex_match.group() == url:
             return True
         else:
             return False 
-            
+
     def get_root_url(self) -> str:
+        """
+        get_root_url(self): Returns the `self.root_url` attribute of the 
+        Crawler instance. \n
+        args; \n
+        self: allpress.net.web.Crawler (Instance reference for crawler object) \n
+        \n
+        returns `str` \n
+        """ 
         return self.root_url
     
+
     def index_site(self, iterations=1):
+        """
+        index_site(self, iterations=1): Indexes web site of the Cralwer \n
+        object. Does so iteratively until the value stored in the kwarg \n
+        `iterations` reaches 0. Has a default value of 1. Value must be an \n
+        integer, 1 is the minimum value. \n
+        args;\n
+        self: allpress.net.web.Crawler (Instance reference for crawler object) \n
+        iterations: int [default=1] (Number of times for web pages to be iterated\n
+        over.)
+        """
         to_parse = [self.root_url]
         ### Index root to get primary list of urls accessible from the homepage. Will exclude all urls that redirect to pages outside of the website.
         while iterations > 0:
@@ -79,6 +126,12 @@ class Crawler:
 
 
     def output_scraped_urls(self):
+        """
+        output_scraped_urls(self): Dumps all URLs parsed by the Crawler object \n
+        to a text file. Location is defined in allpress.settings. \n
+        args; \n
+        self: allpress.net.web.Crawler (Instance reference for crawler object) \n
+        """
         output_file = open(f'{WEB_CRAWLER_OUTPUT_FOLDER}\\{self.source_name.lower().replace(" ", "")}.txt', 'a')
         for url in self.total_parsed:
             output_file.write(f'{url}\n')
