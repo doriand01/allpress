@@ -5,11 +5,13 @@ from googletrans import Translator
 from lingua import LanguageDetectorBuilder, Language
 from bs4 import BeautifulSoup as Soup
 import iso639
+import spacy
 
 from allpress.exceptions import *
 
 logging.getLogger(__name__)
 
+processor = spacy.load("en_core_web_sm")
 primary_language_detector = LanguageDetectorBuilder.from_all_languages().build()
 fallback_language_detector = Translator().detect
 
@@ -36,8 +38,8 @@ def detect_string_language(text: str) -> str:
             language_iso_code = fallback_language_detector(text).lang.upper() 
             return language_iso_code
         except Exception:
-            logging.critical('Fallback language detector failed. Assigining not-null default value.')
-            return 'XX'
+            logging.critical('Fallback language detector failed. Assigining not-null default ISO-639 value.')
+            return 'und'
 
 
 
@@ -62,8 +64,13 @@ def compile_p_text(urls: list[str]) -> list[str]:
             logging.error('Empty bad response when compiling <p> text! Returning non-null placeholder value.')
             return ['NULLVAL']
         parser = Soup(response.content, 'html.parser')
-        p_tags = [tag.text for tag in parser.find_all('p')]
-        compiled_pages.append('\n'.join(p_tags))
+        p_tags = '\n'.join([tag.text for tag in parser.find_all('p')])
+        try:
+            title = parser.find('title').text
+        except Exception:
+            logging.error(f"Couldn't grab title from {response.url}. Giving default title {p_tags[:25]}")
+            title = p_tags[:25]
+        compiled_pages.append((p_tags, title))
     return compiled_pages
 
 
@@ -121,4 +128,11 @@ def get_language_name_from_iso639(iso_code: str) -> str:
     returns `str`
     """
     return iso639.to_name(iso_code)
+
+def extract_dates(text):
+    processed_text = processor(text)
+    dates = [date for date in processed_text.ents if date.label_ == "DATE"]
+    return dates
+
+
     

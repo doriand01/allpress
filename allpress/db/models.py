@@ -5,10 +5,12 @@ from concurrent.futures import ThreadPoolExecutor
 
 import geopy
 import country_converter as coco
+import htmldate
 
 from allpress.lang.word import *
 from allpress.exceptions import TranslationError, NoSuchColumnError
 from allpress.settings import logging
+from allpress.util import get_dtnow_yyyymmdd
 
 logging.getLogger(__name__)
 
@@ -48,16 +50,19 @@ class PageModel(Model):
         'language'     : 'varchar(10)',
         'news_source'  : 'varchar(128)',
         'uid'          : 'varchar(64)',
+        'title'        : 'text',
+        'date'         : 'text'
     }
     column_names = [
         'url', 'home_url',
         'p_data', 'language',
-        'news_source', 'uid'
+        'news_source', 'uid',
+        'title', 'date'
     ]
     def __init__(self, **columns):
         super().__init__(**columns)
         hashobj = md5()
-        hashobj.update(bytes(str(remove_fragment(self.pg_page_url)+self.pg_page_p_data).encode('utf-8')))
+        hashobj.update(bytes(str(self.pg_page_p_data).encode('utf-8')))
         uid = hashobj.hexdigest()
         self.pg_page_uid = uid
 
@@ -65,25 +70,15 @@ class PageModel(Model):
         return f'<{self.pg_page_url}; {self.pg_page_language}...>'
 
 
-"""
-`TranslationModel` is the class which models the `translation` table in the Postgres 
-database. The translation model contains columns which encapsulate the following data 
-relating to each translations in the text of each indexed page: the page's uid in the
-database, the text of the translation, the language of the translation, if the
-translation is the original translation of the text, and if it is an offical,
-human verified translation.
-"""
+
 class TranslationModel(Model):
     """
-    PageModel:  is the class which models the `translation` table in the Postgres\n
-    database. The translation model contains columns which encapsulate the following data\n 
-    relating to each translations in the text of each indexed page: the page's uid in the\n
-    database, the text of the translation, the language of the translation, if the\n
-    translation is the original translation of the text, and if it is an offical,\n
-    human verified translation. All Model classes and child classes\n
-    have no publicly accessible functions, only attributes which help Model a row in \n
-    the database table.
-    \n
+    `TranslationModel` is the class which models the `translation` table in the Postgres 
+    database. The translation model contains columns which encapsulate the following data 
+    relating to each translations in the text of each indexed page: the page's uid in the
+    database, the text of the translation, the language of the translation, if the
+    translation is the original translation of the text, and if it is an offical,
+    human verified translation.
     """
 
     column_name_type_store = {
@@ -92,6 +87,7 @@ class TranslationModel(Model):
         'translation_language' : 'varchar(10)',
         'is_original'          : 'boolean',
         'is_official'          : 'boolean',
+        'title'                : 'text'
     }
     column_names = [
         'uid',
@@ -99,6 +95,7 @@ class TranslationModel(Model):
         'translation_language',
         'is_original',
         'is_official',
+        'title'
     ]
     def __init__(self, **columns):
         super().__init__(**columns)
@@ -177,20 +174,28 @@ def create_page_models(urls: list[str], news_source: str) -> list[PageModel]:
     models = []
     for page_p_data, url in zip(compile_p_text(urls), urls):
         executor = ThreadPoolExecutor(max_workers=1)
-        if not page_p_data:
+        if not page_p_data[0]:
             logging.error('Page does not contain any <p> data to extract. Skipping.')
             continue
-        page_language_future = executor.submit(detect_string_language, page_p_data)
+        page_language_future = executor.submit(detect_string_language, page_p_data[0])
+        try:
+            found_date = htmldate.find_date(url)
+        except ValueError:
+            logging.warning(f'htmldate module could not process date for {url}. Inserting {get_dtnow_yyyymmdd()} as placeholder value.')
+            found_date = get_dtnow_yyyymmdd()
+        if found_date == None:
+            found_date = get_dtnow_yyyymmdd()
         page_model = PageModel(url=url, 
-                            home_url=' ', p_data=page_p_data, 
-                            news_source=news_source, language=page_language_future.result())
+                               home_url=' ', p_data=page_p_data[0], 
+                               news_source=news_source, language=page_language_future.result(),
+                               title=page_p_data[1], date=found_date )
         models.append(page_model)
     return models
 
 
 
 def create_translation_model(page: PageModel, target_language=None,
-                             auto=True, text=None) -> TranslationModel:
+                             auto=True, text=None, title=None) -> TranslationModel:
     """Creates a translation model in the database, which
     is simply any stored written version of the article in
     any language. It can be done automatically via the
@@ -213,30 +218,36 @@ def create_translation_model(page: PageModel, target_language=None,
         translation_language = page['language']
         translation_is_original = True
         translation_is_official = True
+        translation_title = page['title']
     if target_language and auto:
         translation_text = translate_page(page['p_data'], 
                                           src=page['language'],
                                           dest=target_language)
+        translation_title = translate_page(page['title'],
+                                           src=page['language'],
+                                           dest=target_language)
         translation_language = target_language
         translation_is_original = False
         translation_is_official = False
     elif target_language and not auto:
-        if not text:
-            logging.critical('Cannot create translation model without text provided! Aborting.')
-            raise TranslationError("""No text was provided for the translation. To 
-                                   If you do not wish to use text for the translation
+        if not text or not title:
+            logging.critical('Cannot create translation model without text or title provided! Aborting.')
+            raise TranslationError("""No text or title was provided for the translation. 
+                                   If you do not wish to provide text for the translation
                                    enable auto=True.
                                    """)
         translation_text = text
         translation_language = target_language
         translation_is_original = False
         translation_is_official = True
+        translation_title = title
     translation_model = TranslationModel(
         uid=page_uid, 
         translation_text=translation_text,
         translation_language=translation_language,
         is_original=translation_is_original,
-        is_official=translation_is_official,)
+        is_official=translation_is_official,
+        title=translation_title)
     return translation_model
 
 

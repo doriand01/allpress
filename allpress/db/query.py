@@ -16,8 +16,9 @@ def import_news_sources_from_file(filepath: str) -> list:
 
 
 def execute_text_search_tsquery(text: str, language_as_iso_code=None) -> list:
-    language_real_name =  iso639.to_name(language_as_iso_code).lower()
+    language_real_name =  iso639.to_name(language_as_iso_code).lower().split(';')[0]
     tsquery_filepath = settings.POSTGRESQL_QUERY_PATH + '\\' + f'{language_real_name}\\{language_real_name}_websearch_tsquery.sql'
+    settings.logging.info(f"Executing SQL query from {tsquery_filepath}")
     tsquery_sqlfile = open(tsquery_filepath, 'r')
     tsquery = tsquery_sqlfile.read()
     tsquery_sqlfile.close()

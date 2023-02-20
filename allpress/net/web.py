@@ -1,5 +1,6 @@
 from copy import deepcopy
 from re import match
+from urllib.parse import urljoin
 
 import html.parser as parser
 
@@ -24,7 +25,7 @@ def _html_index_helper(urls: list, crawler) -> set[str]:
         parser = Soup(response.content, 'html.parser')
         urls_to_scan = set([url.attrs['href'] for url in list(parser.find_all('a')) if 'href' in url.attrs.keys()])
         for url in urls_to_scan:
-            if crawler.root_url in url and url not in crawler.total_parsed:
+            if crawler.core_url in url and url not in crawler.total_parsed and crawler.is_valid_url(url):
                 # `Adds URLs found from page being scanned to the set of discovered URLs,
                 # if they are not already in the Crawler object's stored list of previously
                 # discovered URLs.
@@ -32,8 +33,8 @@ def _html_index_helper(urls: list, crawler) -> set[str]:
                 logging.info(f'Adding url {url} to the index.')
             elif crawler.core_url not in url and url not in crawler.total_parsed:
                 logging.info(f'{url} does not contain the root. Attempting to match to regex to see if it is a valid url...')
-                joined_url = f'{crawler.root_url}/{url}'
-                if Crawler.is_valid_url(joined_url):
+                joined_url = urljoin(crawler.root_url,url)
+                if Crawler.is_valid_url(joined_url) and crawler.core_url in joined_url:
                     logging.info(f'{joined_url} matches with verification regex. Adding to the index.')
                     urls_found.add(joined_url)
                 elif url.startswith('//') and Crawler.is_valid_url(url[2:]) and crawler.core_url in url:

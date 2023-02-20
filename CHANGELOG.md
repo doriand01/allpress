@@ -133,7 +133,19 @@ http requests.
 - module `allpress.db.io` has been refactored to `allpress.db.query`
 
 ## 0.7.3a
-### 10 December 2022
+### 17 December 2022
 
 - Complete documentation for non private functions.
 - Change license to GPL v3.
+
+## 0.7.4a
+### 17 December 2022    
+
+- Add tsquery support for Arabic, Armenian, Basque, French, Hindi, Italian, Portuguese, Russian, and Spanish.
+- Multilingual support for search queries. Can automatically detect language of the search query. Returns results
+in a list.
+
+## 0.7.5a
+### 17 February 2023
+
+- Edit `pg_page` table in database, to add column for date of webpage. To be used to assist with search relevancy in the future.

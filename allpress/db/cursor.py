@@ -271,3 +271,15 @@ def migrate_news_sources_to_db(news_sources: list[NewsSourceModel]):
         except ForeignKeyViolation:
             db_cursor.execute('ROLLBACK')
             continue
+
+def _execute_sql_file(filepath: str):
+    sqlfile = open(filepath, "r")
+    sqlcode = sqlfile.read()
+    sqlfile.close()
+    try:
+        db_cursor.execute(sqlcode)
+    except Exception as e:
+        logging.error(f'Execution of query in file {filepath} failed!')
+        logging.error(f'Traceback info: {e}')
+        logging.info('Rolling back database.')
+        db_cursor.execute('ROLLBACK')

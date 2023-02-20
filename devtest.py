@@ -1,7 +1,6 @@
 import allpress
 import csv
 
-
 csvfile = "C:\\Users\\preit\\OneDrive\\Desktop\\coding projects\\allpress\\sources.csv"
 file = open(csvfile, 'r')
 reader = csv.reader(file, delimiter=',')
@@ -17,4 +16,5 @@ for source in sources:
     allpress.cursor.migrate_pages_to_db(models)
     allpress.cursor.migrate_translations_to_db(transmods)
 
-    
+results = allpress.graphic_search_by_text('Climate change', language='EN')
+print(results)

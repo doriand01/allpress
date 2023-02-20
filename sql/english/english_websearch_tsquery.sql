@@ -1,4 +1,4 @@
-SELECT translation_text, uid, 
+SELECT translation_text, uid, title
     ts_rank(search_tsvectors_en, websearch_to_tsquery($$english$$, QUERYVAL)) +
     ts_rank(search_tsvectors_en, websearch_to_tsquery($$simple$$, QUERYVAL))
 as rank
